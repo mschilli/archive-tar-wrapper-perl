@@ -35,6 +35,8 @@ sub new {
     mkpath [$self->{tardir}], 0, 0755 or
         LOGDIE "Cannot mkpath $self->{tardir} ($!)";
 
+    $self->{objdir} = tempdir(CLEANUP => 1);
+
     bless $self, $class;
 }
 
@@ -146,6 +148,71 @@ sub list_all {
 }
 
 ###########################################
+sub list_reset {
+###########################################
+    my($self) = @_;
+
+    my $list_file = File::Spec->catfile($self->{objdir}, "list");
+    open FILE, ">$list_file" or LOGDIE "Can't open $list_file";
+
+    my $cwd = getcwd();
+    chdir $self->{tardir} or LOGDIE "Can't chdir to $self->{tardir} ($!)";
+
+    find(sub {
+              return if -d;
+              my $entry = $File::Find::name;
+              $entry =~ s#\./##;
+              print FILE "$entry\n";
+            }, ".");
+
+    chdir $cwd or LOGDIE "Can't chdir to $cwd ($!)";
+
+    close FILE;
+
+    $self->offset(0);
+}
+
+###########################################
+sub list_next {
+###########################################
+    my($self) = @_;
+
+    my $offset = $self->offset();
+
+    my $list_file = File::Spec->catfile($self->{objdir}, "list");
+    open FILE, "<$list_file" or LOGDIE "Can't open $list_file";
+    seek FILE, $offset, 0;
+    my $entry = <FILE>;
+
+    return undef unless defined $entry;
+
+    $self->offset(tell FILE);
+
+    chomp $entry;
+    return [$entry, File::Spec->catfile($self->{tmpdir}, $entry)];
+}
+
+###########################################
+sub offset {
+###########################################
+    my($self, $new_offset) = @_;
+
+    my $offset_file = File::Spec->catfile($self->{objdir}, "offset");
+
+    if(defined $new_offset) {
+        open FILE, ">$offset_file" or LOGDIE "Can't open $offset_file";
+        print FILE "$new_offset\n";
+        close FILE;
+    }
+
+    open FILE, "<$offset_file" or LOGDIE "Can't open $offset_file";
+    my $offset = <FILE>;
+    chomp $offset;
+    return $offset;
+    close FILE;
+}
+
+###########################################
 sub tarup {
 ###########################################
     my($self, $tarfile, $compress) = @_;
@@ -190,6 +257,15 @@ sub bin_find {
     return undef;
 }
 
+######################################
+sub object_dir {
+######################################
+    my($self) = @_;
+
+    my($fh, $filename) = tempfile(CLEANUP => 1);
+    $self->{objdir} = $filename;
+}
+
 1;
 
 __END__
@@ -227,7 +303,7 @@ Archive::Tar::Wrapper - API wrapper around the 'tar' utility
     $arch->remove($logic_path);
 
         # Find the physical location of a temporary file
-    my($tmp_path) = $arch->find($tar_path);
+    my($tmp_path) = $arch->locate($tar_path);
 
         # Create a tarball
     $arch->tarup($tarfile, $compress);

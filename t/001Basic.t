@@ -13,7 +13,7 @@ use File::Temp qw(tempfile);
 my $TARDIR = "data";
 $TARDIR = "t/$TARDIR" unless -d $TARDIR;
 
-use Test::More qw(no_plan);
+use Test::More tests => 14;
 BEGIN { use_ok('Archive::Tar::Wrapper') };
 
 my $arch = Archive::Tar::Wrapper->new();
@@ -48,3 +48,11 @@ ok(-s $f2 > 0, "Checking tarball files sizes");
 
 is(-s $f1, -s $f2, "Comparing tarball files sizes");
 
+# Iterators
+$arch->list_reset();
+@elements = ();
+while(my $entry = $arch->list_next()) {
+    push @elements, $entry->[0];
+}
+$got = join " ", sort @elements;
+is($got, "001Basic.t foo/bar/baz", "Check list");
