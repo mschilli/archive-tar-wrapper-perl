@@ -1,0 +1,24 @@
+######################################################################
+    Archive::Tar::Wrapper 0.01
+######################################################################
+
+NAME
+    Archive::Tar::Wrapper - blah blah blah
+
+SYNOPSIS
+        use Archive::Tar::Wrapper;
+
+DESCRIPTION
+    Archive::Tar::Wrapper blah blah blah.
+
+EXAMPLES
+      $ perl -MArchive::Tar::Wrapper -le 'print $foo'
+
+LEGALESE
+    Copyright 2005 by Mike Schilli, all rights reserved. This program is
+    free software, you can redistribute it and/or modify it under the same
+    terms as Perl itself.
+
+AUTHOR
+    2005, Mike Schilli <cpan@perlmeister.com>
+
