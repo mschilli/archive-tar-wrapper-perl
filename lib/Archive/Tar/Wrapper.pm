@@ -13,6 +13,9 @@ use Log::Log4perl qw(:easy);
 use File::Spec::Functions;
 use File::Spec;
 use File::Path;
+use File::Copy;
+use File::Find;
+use File::Basename;
 use Cwd;
 
 our $VERSION = "0.01";
@@ -36,7 +39,7 @@ sub new {
 }
 
 ###########################################
-sub open {
+sub read {
 ###########################################
     my($self, $tarfile) = @_;
 
@@ -75,7 +78,7 @@ sub is_compressed {
 }
 
 ###########################################
-sub find {
+sub locate {
 ###########################################
     my($self, $rel_path) = @_;
 
@@ -88,6 +91,84 @@ sub find {
     DEBUG "$real_path doesn't exist";
 
     WARN "$rel_path not found in tarball";
+    return undef;
+}
+
+###########################################
+sub add {
+###########################################
+    my($self, $rel_path, $path_or_stringref) = @_;
+
+    my $target = File::Spec->catfile($self->{tardir}, $rel_path);
+
+    if(ref($path_or_stringref)) {
+        open FILE, ">$target" or LOGDIE "Can't open $target ($!)";
+        print FILE $path_or_stringref;
+        close FILE;
+    } else {
+        my $target_dir = dirname($target);
+        mkpath($target_dir, 0, 0755) unless -d $target_dir;
+        copy $path_or_stringref, $target or
+            LOGDIE "Can't copy $path_or_stringref to $target ($!)";
+    }
+}
+
+###########################################
+sub remove {
+###########################################
+    my($self, $rel_path) = @_;
+
+    my $target = File::Spec->catfile($self->{tardir}, $rel_path);
+
+    rmtree($target) or LOGDIE "Can't rmtree $target ($!)";
+}
+
+###########################################
+sub list_all {
+###########################################
+    my($self) = @_;
+
+    my $cwd = getcwd();
+    chdir $self->{tardir} or LOGDIE "Can't chdir to $self->{tardir} ($!)";
+
+    my @entries = ();
+
+    find(sub {
+              return if -d;
+              my $entry = $File::Find::name;
+              $entry =~ s#\./##;
+              push @entries, $entry;
+            }, ".");
+
+    chdir $cwd or LOGDIE "Can't chdir to $cwd ($!)";
+
+    return @entries;
+}
+
+###########################################
+sub tarup {
+###########################################
+    my($self, $tarfile, $compress) = @_;
+
+    my $cwd = getcwd();
+    chdir $self->{tardir} or LOGDIE "Can't chdir to $self->{tardir} ($!)";
+
+    unless(File::Spec::Functions::file_name_is_absolute($tarfile)) {
+        $tarfile = File::Spec::Functions::rel2abs($tarfile, $cwd);
+    }
+
+    my $compr_opt = "";
+    $compr_opt = "z" if $compress;
+
+    my $cmd = "$self->{tar} ${compr_opt}cf $tarfile .";
+
+    my $rc = system("$cmd 2>/dev/null");
+
+    chdir $cwd or LOGDIE "Cannot chdir to $cwd";
+
+    return 1 if $rc == 0;
+
+    ERROR "$cmd: $!";
     return undef;
 }
 
@@ -124,7 +205,7 @@ Archive::Tar::Wrapper - API wrapper around the 'tar' utility
     my $arch = Archive::Tar::Wrapper->new();
 
         # Open a tarball, expand it into a temporary directory
-    $arch->open("archive.tgz");
+    $arch->read("archive.tgz");
 
         # Iterate over all entries in the archive
     $arch->list_reset(); # Reset Iterator
@@ -141,6 +222,9 @@ Archive::Tar::Wrapper - API wrapper around the 'tar' utility
 
         # Add a new entry
     $arch->add($logic_path, $file_or_stringref);
+
+        # Remove an entry
+    $arch->remove($logic_path);
 
         # Find the physical location of a temporary file
     my($tmp_path) = $arch->find($tar_path);
