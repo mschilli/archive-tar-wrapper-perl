@@ -3,18 +3,56 @@
 ######################################################################
 
 NAME
-    Archive::Tar::Wrapper - blah blah blah
+    Archive::Tar::Wrapper - API wrapper around the 'tar' utility
 
 SYNOPSIS
         use Archive::Tar::Wrapper;
 
+        my $arch = Archive::Tar::Wrapper->new();
+
+            # Open a tarball, expand it into a temporary directory
+        $arch->read("archive.tgz");
+
+            # Iterate over all entries in the archive
+        $arch->list_reset(); # Reset Iterator
+                             # Iterate through archive
+        while(my($tar_path, $phys_path) = $arch->list_next()) {
+            print "$tar_path\n";
+        }
+
+            # Get a huge list with all entries
+        for my $entry ($arch->list_all()) {
+            my($tar_path, $real_path) = @$entry;
+            print "Tarpath: $tar_path Tempfile: $real_path\n";
+        }
+
+            # Add a new entry
+        $arch->add($logic_path, $file_or_stringref);
+
+            # Remove an entry
+        $arch->remove($logic_path);
+
+            # Find the physical location of a temporary file
+        my($tmp_path) = $arch->locate($tar_path);
+
+            # Create a tarball
+        $arch->tarup($tarfile, $compress);
+
 DESCRIPTION
-    Archive::Tar::Wrapper blah blah blah.
+    Archive::Tar::Wrapper is an API wrapper around the 'tar' command line
+    utility. It never stores anything in memory, but works on temporary
+    directory structures on disk instead. It provides a mapping between the
+    logical paths in the tarball and the 'real' files in the temporary
+    directory on disk.
 
-EXAMPLES
-      $ perl -MArchive::Tar::Wrapper -le 'print $foo'
+    It differs from Archive::Tar in two ways:
 
-LEGALESE
+    *   Archive::Tar::Wrapper doesn't hold anything in memory. Everything is
+        stored on disk.
+
+    *   Archive::Tar::Wrapper is 100% compliant with the platform's "tar"
+        utility, because it uses it internally.
+
     Copyright 2005 by Mike Schilli, all rights reserved. This program is
     free software, you can redistribute it and/or modify it under the same
     terms as Perl itself.
