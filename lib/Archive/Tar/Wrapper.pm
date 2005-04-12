@@ -99,7 +99,7 @@ sub locate {
 ###########################################
 sub add {
 ###########################################
-    my($self, $rel_path, $path_or_stringref, $user, $perm) = @_;
+    my($self, $rel_path, $path_or_stringref, $perm, $user) = @_;
 
     my $target = File::Spec->catfile($self->{tardir}, $rel_path);
 
@@ -117,14 +117,19 @@ sub add {
     if(defined $user) {
         chown $user, $target or
             LOGDIE "Can't chown $target to $user ($!)";
-        if(defined $perm) {
-            chmod $perm, $target or 
-                    LOGDIE "Can't chmod $target to $perm ($!)";
-        }
-    } elsif(!ref($path_or_stringref)) {
+    }
+
+    if(defined $perm) {
+        chmod $perm, $target or 
+                LOGDIE "Can't chmod $target to $perm ($!)";
+    }
+
+    if(!defined $user and !defined $perm and !ref($path_or_stringref)) {
         perm_cp($path_or_stringref, $target) or
             LOGDIE "Can't perm_cp $path_or_stringref to $target ($!)";
     }
+
+    1;
 }
 
 ######################################
