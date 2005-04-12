@@ -99,7 +99,7 @@ sub locate {
 ###########################################
 sub add {
 ###########################################
-    my($self, $rel_path, $path_or_stringref) = @_;
+    my($self, $rel_path, $path_or_stringref, $user, $perm) = @_;
 
     my $target = File::Spec->catfile($self->{tardir}, $rel_path);
 
@@ -113,6 +113,50 @@ sub add {
         copy $path_or_stringref, $target or
             LOGDIE "Can't copy $path_or_stringref to $target ($!)";
     }
+
+    if(defined $user) {
+        chown $user, $target or
+            LOGDIE "Can't chown $target to $user ($!)";
+        if(defined $perm) {
+            chmod $perm, $target or 
+                    LOGDIE "Can't chmod $target to $perm ($!)";
+        }
+    } elsif(!ref($path_or_stringref)) {
+        perm_cp($path_or_stringref, $target) or
+            LOGDIE "Can't perm_cp $path_or_stringref to $target ($!)";
+    }
+}
+
+######################################
+sub perm_cp {
+######################################
+    # Lifted from Ben Okopnik's
+    # http://www.linuxgazette.com/issue87/misc/tips/cpmod.pl.txt
+
+    my $perms = perm_get($_[0]);
+    perm_set($_[1], $perms);
+}
+
+######################################
+sub perm_get {
+######################################
+    my($filename) = @_;
+
+    my @stats = (stat $filename)[2,4,5] or
+        LOGDIE "Cannot stat $filename ($!)";
+
+    return \@stats;
+}
+
+######################################
+sub perm_set {
+######################################
+    my($filename, $perms) = @_;
+
+    chown($perms->[1], $perms->[2], $filename) or
+        LOGDIE "Cannot chown $filename ($!)";
+    chmod($perms->[0] & 07777,    $filename) or
+        LOGDIE "Cannot chmod $filename ($!)";
 }
 
 ###########################################
