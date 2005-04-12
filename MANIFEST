@@ -6,3 +6,4 @@ MANIFEST.SKIP
 README
 t/001Basic.t
 t/data/foo.tgz
+META.yml                                 Module meta-data (added by MakeMaker)
