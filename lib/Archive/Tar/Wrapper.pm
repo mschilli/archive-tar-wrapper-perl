@@ -76,6 +76,16 @@ sub is_compressed {
     my($self, $tarfile) = @_;
 
     return 1 if $tarfile =~ /\.t?gz$/i;
+
+        # Sloppy check for gzip files
+    open FILE, "<$tarfile" or die "Cannot open $tarfile";
+    binmode FILE;
+    my $read = sysread(FILE, my $two, 2, 0) or die "Cannot sysread";
+    close FILE;
+    return 1 if 
+        ord(substr($two, 0, 1)) eq 0x1F and 
+        ord(substr($two, 1, 1)) eq 0x8B;
+
     return 0;
 }
 
