@@ -18,7 +18,7 @@ use File::Find;
 use File::Basename;
 use Cwd;
 
-our $VERSION = "0.01";
+our $VERSION = "0.02";
 
 ###########################################
 sub new {
@@ -26,10 +26,15 @@ sub new {
     my($class, %options) = @_;
 
     my $self = {
-        tmpdir  => tempdir(CLEANUP => 1),
-        tar     => bin_find("tar"),
+        tar     => undef,
+        tmpdir  => undef,
         %options,
     };
+
+    $self->{tar}     => bin_find("tar") unless $self->{tar};
+
+    $self->{tmpdir}  => tempdir(CLEANUP => 1, 
+                                $tmpdir ? (DIR => $tmpdir) : ());
 
     $self->{tardir} = File::Spec->catfile($self->{tmpdir}, "tar");
     mkpath [$self->{tardir}], 0, 0755 or
@@ -203,7 +208,7 @@ sub list_all {
 
     chdir $cwd or LOGDIE "Can't chdir to $cwd ($!)";
 
-    return @entries;
+    return \@entries;
 }
 
 ###########################################
@@ -272,7 +277,7 @@ sub offset {
 }
 
 ###########################################
-sub tarup {
+sub write {
 ###########################################
     my($self, $tarfile, $compress) = @_;
 
@@ -350,7 +355,7 @@ Archive::Tar::Wrapper - API wrapper around the 'tar' utility
     }
 
         # Get a huge list with all entries
-    for my $entry ($arch->list_all()) {
+    for my $entry (@{$arch->list_all()}) {
         my($tar_path, $real_path) = @$entry;
         print "Tarpath: $tar_path Tempfile: $real_path\n";
     }
@@ -365,7 +370,7 @@ Archive::Tar::Wrapper - API wrapper around the 'tar' utility
     my($tmp_path) = $arch->locate($tar_path);
 
         # Create a tarball
-    $arch->tarup($tarfile, $compress);
+    $arch->write($tarfile, $compress);
 
 =head1 DESCRIPTION
 
@@ -390,6 +395,120 @@ Archive::Tar::Wrapper is 100% compliant with the platform's C<tar>
 utility, because it uses it internally.
 
 =back
+
+=head1 METHODS
+
+=over 4
+
+=item B<my $arch = Archive::Tar::Wrapper-E<gt>new()>
+
+Constructor for the tar wrapper class. Finds the C<tar> executable
+by searching C<PATH> and returning the first hit. In case you want
+to use a different tar executable, you can specify it as a parameter:
+
+    my $arch = Archive::Tar::Wrapper->new(tar => '/path/to/tar');
+
+Since C<Archive::Tar::Wrapper> creates temporary directories to store
+tar data, the location of the temporary directory can be specified:
+
+    my $arch = Archive::Tar::Wrapper->new(tmpdir => '/path/to/tmpdir');
+
+=item B<$arch-E<gt>read("archive.tgz")>
+
+C<read()> opens the given tarball, expands it into a temporary directory
+and returns 1 on success und C<undef> on failure. 
+The temporary directory holding the tar data gets cleaned up when C<$arch>
+goes out of scope.
+
+C<read> handles both compressed and uncompressed files. To find out if
+a file is compressed or uncompressed, it tries to guess by extension,
+then by checking the first couple of bytes in the tarfile.
+
+=item B<$arch-E<gt>list_reset()>
+
+Resets the list iterator. To be used before the first call to
+B<$arch->list_next()>.
+
+=item B<my($tar_path, $phys_path) = $arch-E<gt>list_next()>
+
+Returns the next item in the tarfile. It returns a list of two scalars:
+the relative path of the item in the tarfile and the physical path
+to the unpacked file or directory on disk. To determine if the item
+is a file or directory, use perl's C<-f> and C<-d> operators on the
+physical path.
+
+=item B<my $items = $arch-E<gt>list_all()>
+
+Returns a reference to a (possibly huge) array of items in the
+tarfile. Each item is a reference to an array, containing two
+elements: the relative path of the item in the tarfile and the
+physical path to the unpacked file or directory on disk.
+
+To iterate over the list, the following construct can be used:
+
+        # Get a huge list with all entries
+    for my $entry (@{$arch->list_all()}) {
+        my($tar_path, $real_path) = @$entry;
+        print "Tarpath: $tar_path Tempfile: $real_path\n";
+    }
+
+If the list of items in the tarfile is big, use C<list_reset()> and
+C<list_next()> instead of C<list_all>.
+
+=item B<$arch-E<gt>add($logic_path, $file_or_stringref)>
+
+Add a new file to the tarball. C<$logic_path> is the virtual path
+of the file within the tarball. C<$file_or_stringref> is either
+a scalar, in which case it holds the physical path of a file
+on disk to be transferred (i.e. copied) to the tarball. Or it is
+a reference to a scalar, in which case its content is interpreted
+to be the data of the file.
+
+=item B<$arch-E<gt>remove($logic_path)>
+
+Removes a file from the tarball. C<$logic_path> is the virtual path
+of the file within the tarball.
+
+=item B<$arch-E<gt>locate($logic_path)>
+
+Finds the physical location of a file, specified by C<$logic_path>, which
+is the virtual path of the file within the tarball. Returns a path to 
+the temporary file C<Archive::Tar::Wrapper> created to manipulate the
+tarball on disk.
+
+=item B<$arch-E<gt>write($tarfile, $compress)>
+
+Write out the tarball by tarring up all temporary files and directories
+and store it in C<$tarfile> on disk. If C<$compress> holds a true value,
+compression is used.
+
+=back
+
+=head1 KNOWN LIMITATIONS
+
+=over 4
+
+=item *
+
+Currently, only C<tar> programs supporting the C<z> option (for 
+compressing/decompressing) are supported. Future version will use
+C<gzip> alternatively.
+
+=item *
+
+Currently, you can't add empty directories to a tarball directly.
+You could add a temporary file within a directory, and then
+C<remove()> the file.
+
+=item *
+
+If you delete a file, the empty directories it was located in 
+stay in the tarball. You could try to C<locate()> them and delete
+them. This will be fixed, though.
+
+=back
+
+=head1 LEGALESE
 
 Copyright 2005 by Mike Schilli, all rights reserved.
 This program is free software, you can redistribute it and/or
