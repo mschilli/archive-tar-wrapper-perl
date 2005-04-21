@@ -1,5 +1,5 @@
 ######################################################################
-    Archive::Tar::Wrapper 0.01
+    Archive::Tar::Wrapper 0.02
 ######################################################################
 
 NAME
@@ -21,7 +21,7 @@ SYNOPSIS
         }
 
             # Get a huge list with all entries
-        for my $entry ($arch->list_all()) {
+        for my $entry (@{$arch->list_all()}) {
             my($tar_path, $real_path) = @$entry;
             print "Tarpath: $tar_path Tempfile: $real_path\n";
         }
@@ -36,7 +36,7 @@ SYNOPSIS
         my($tmp_path) = $arch->locate($tar_path);
 
             # Create a tarball
-        $arch->tarup($tarfile, $compress);
+        $arch->write($tarfile, $compress);
 
 DESCRIPTION
     Archive::Tar::Wrapper is an API wrapper around the 'tar' command line
@@ -53,6 +53,98 @@ DESCRIPTION
     *   Archive::Tar::Wrapper is 100% compliant with the platform's "tar"
         utility, because it uses it internally.
 
+METHODS
+    my $arch = Archive::Tar::Wrapper->new()
+        Constructor for the tar wrapper class. Finds the "tar" executable by
+        searching "PATH" and returning the first hit. In case you want to
+        use a different tar executable, you can specify it as a parameter:
+
+            my $arch = Archive::Tar::Wrapper->new(tar => '/path/to/tar');
+
+        Since "Archive::Tar::Wrapper" creates temporary directories to store
+        tar data, the location of the temporary directory can be specified:
+
+            my $arch = Archive::Tar::Wrapper->new(tmpdir => '/path/to/tmpdir');
+
+    $arch->read("archive.tgz")
+        "read()" opens the given tarball, expands it into a temporary
+        directory and returns 1 on success und "undef" on failure. The
+        temporary directory holding the tar data gets cleaned up when $arch
+        goes out of scope.
+
+        "read" handles both compressed and uncompressed files. To find out
+        if a file is compressed or uncompressed, it tries to guess by
+        extension, then by checking the first couple of bytes in the
+        tarfile.
+
+    $arch->list_reset()
+        Resets the list iterator. To be used before the first call to
+        $arch-list_next()>.
+
+    my($tar_path, $phys_path) = $arch->list_next()
+        Returns the next item in the tarfile. It returns a list of two
+        scalars: the relative path of the item in the tarfile and the
+        physical path to the unpacked file or directory on disk. To
+        determine if the item is a file or directory, use perl's "-f" and
+        "-d" operators on the physical path.
+
+    my $items = $arch->list_all()
+        Returns a reference to a (possibly huge) array of items in the
+        tarfile. Each item is a reference to an array, containing two
+        elements: the relative path of the item in the tarfile and the
+        physical path to the unpacked file or directory on disk.
+
+        To iterate over the list, the following construct can be used:
+
+                # Get a huge list with all entries
+            for my $entry (@{$arch->list_all()}) {
+                my($tar_path, $real_path) = @$entry;
+                print "Tarpath: $tar_path Tempfile: $real_path\n";
+            }
+
+        If the list of items in the tarfile is big, use "list_reset()" and
+        "list_next()" instead of "list_all".
+
+    $arch->add($logic_path, $file_or_stringref)
+        Add a new file to the tarball. $logic_path is the virtual path of
+        the file within the tarball. $file_or_stringref is either a scalar,
+        in which case it holds the physical path of a file on disk to be
+        transferred (i.e. copied) to the tarball. Or it is a reference to a
+        scalar, in which case its content is interpreted to be the data of
+        the file.
+
+    $arch->remove($logic_path)
+        Removes a file from the tarball. $logic_path is the virtual path of
+        the file within the tarball.
+
+    $arch->locate($logic_path)
+        Finds the physical location of a file, specified by $logic_path,
+        which is the virtual path of the file within the tarball. Returns a
+        path to the temporary file "Archive::Tar::Wrapper" created to
+        manipulate the tarball on disk.
+
+    $arch->write($tarfile, $compress)
+        Write out the tarball by tarring up all temporary files and
+        directories and store it in $tarfile on disk. If $compress holds a
+        true value, compression is used.
+
+KNOWN LIMITATIONS
+    *   Currently, only "tar" programs supporting the "z" option (for
+        compressing/decompressing) are supported. Future version will use
+        "gzip" alternatively.
+
+    *   Currently, you can't add empty directories to a tarball directly.
+        You could add a temporary file within a directory, and then
+        "remove()" the file.
+
+    *   If you delete a file, the empty directories it was located in stay
+        in the tarball. You could try to "locate()" them and delete them.
+        This will be fixed, though.
+
+    *   Filenames containing newlines are causing problems with the list
+        iterators. To be fixed.
+
+LEGALESE
     Copyright 2005 by Mike Schilli, all rights reserved. This program is
     free software, you can redistribute it and/or modify it under the same
     terms as Perl itself.

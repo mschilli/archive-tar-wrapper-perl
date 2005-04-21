@@ -31,10 +31,11 @@ sub new {
         %options,
     };
 
-    $self->{tar}     => bin_find("tar") unless $self->{tar};
+    $self->{tar}     = bin_find("tar") unless $self->{tar};
 
-    $self->{tmpdir}  => tempdir(CLEANUP => 1, 
-                                $tmpdir ? (DIR => $tmpdir) : ());
+    $self->{tmpdir}  = tempdir(CLEANUP => 1, 
+                                $self->{tmpdir} ? 
+                                    (DIR => $self->{tmpdir}) : ());
 
     $self->{tardir} = File::Spec->catfile($self->{tmpdir}, "tar");
     mkpath [$self->{tardir}], 0, 0755 or
