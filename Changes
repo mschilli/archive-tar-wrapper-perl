@@ -1,9 +1,9 @@
 ######################################################################
 Revision history for Perl extension Archive::Tar::Wrapper
 
-TODO: 
-* File list/offset -> Cache::FileCache (file names with newlines etc.)
+0.02  2005/04/20
+   (ms) Added lots of documentation.
 
 0.01  2005/04/10
-      * Where it all began.
+   (ms) Where it all began.
 
