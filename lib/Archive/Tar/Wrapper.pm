@@ -506,6 +506,11 @@ If you delete a file, the empty directories it was located in
 stay in the tarball. You could try to C<locate()> them and delete
 them. This will be fixed, though.
 
+=item *
+
+Filenames containing newlines are causing problems with the list
+iterators. To be fixed.
+
 =back
 
 =head1 LEGALESE
