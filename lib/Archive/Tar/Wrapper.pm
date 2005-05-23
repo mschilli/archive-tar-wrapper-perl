@@ -18,7 +18,7 @@ use File::Find;
 use File::Basename;
 use Cwd;
 
-our $VERSION = "0.02";
+our $VERSION = "0.03";
 
 ###########################################
 sub new {
@@ -292,15 +292,20 @@ sub write {
     my $compr_opt = "";
     $compr_opt = "z" if $compress;
 
-    my $cmd = "$self->{tar} ${compr_opt}cf $tarfile .";
+    opendir DIR, "." or LOGDIE "Cannot open $self->{tardir}";
+    my @top_entries = map { $_ !~ /^\.\.?$/ } readdir DIR;
+    closedir DIR;
 
-    my $rc = system("$cmd 2>/dev/null");
+    my @cmd = ($self->{tar}, "${compr_opt}", $tarfile, @top_entries);
+
+    DEBUG "Running @cmd";
+    my $rc = system(@cmd);
 
     chdir $cwd or LOGDIE "Cannot chdir to $cwd";
 
     return 1 if $rc == 0;
 
-    ERROR "$cmd: $!";
+    ERROR "@cmd: $!";
     return undef;
 }
 
