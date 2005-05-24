@@ -8,7 +8,7 @@ package Archive::Tar::Wrapper;
 
 use strict;
 use warnings;
-use File::Temp qw(tempdir tempfile);
+use File::Temp qw(tempdir);
 use Log::Log4perl qw(:easy);
 use File::Spec::Functions;
 use File::Spec;
@@ -33,15 +33,14 @@ sub new {
 
     $self->{tar}     = bin_find("tar") unless $self->{tar};
 
-    $self->{tmpdir}  = tempdir(CLEANUP => 1, 
-                                $self->{tmpdir} ? 
+    $self->{tmpdir}  = tempdir($self->{tmpdir} ? 
                                     (DIR => $self->{tmpdir}) : ());
 
     $self->{tardir} = File::Spec->catfile($self->{tmpdir}, "tar");
     mkpath [$self->{tardir}], 0, 0755 or
         LOGDIE "Cannot mkpath $self->{tardir} ($!)";
 
-    $self->{objdir} = tempdir(CLEANUP => 1);
+    $self->{objdir} = tempdir();
 
     bless $self, $class;
 }
@@ -254,7 +253,7 @@ sub list_next {
     $self->offset(tell FILE);
 
     chomp $entry;
-    return [$entry, File::Spec->catfile($self->{tmpdir}, $entry)];
+    return [$entry, File::Spec->catfile($self->{tmpdir}, "tar", $entry)];
 }
 
 ###########################################
@@ -293,10 +292,10 @@ sub write {
     $compr_opt = "z" if $compress;
 
     opendir DIR, "." or LOGDIE "Cannot open $self->{tardir}";
-    my @top_entries = map { $_ !~ /^\.\.?$/ } readdir DIR;
+    my @top_entries = grep { $_ !~ /^\.\.?$/ } readdir DIR;
     closedir DIR;
 
-    my @cmd = ($self->{tar}, "${compr_opt}", $tarfile, @top_entries);
+    my @cmd = ($self->{tar}, "${compr_opt}cf", $tarfile, @top_entries);
 
     DEBUG "Running @cmd";
     my $rc = system(@cmd);
@@ -313,6 +312,9 @@ sub write {
 sub DESTROY {
 ###########################################
     my($self) = @_;
+
+    rmtree($self->{objdir}) if exists $self->{objdir};
+    rmtree($self->{tmpdir}) if exists $self->{tmpdir};
 }
 
 ######################################
@@ -325,15 +327,6 @@ sub bin_find {
             return $full if -x $full;
     }
     return undef;
-}
-
-######################################
-sub object_dir {
-######################################
-    my($self) = @_;
-
-    my($fh, $filename) = tempfile(CLEANUP => 1);
-    $self->{objdir} = $filename;
 }
 
 1;
@@ -356,7 +349,8 @@ Archive::Tar::Wrapper - API wrapper around the 'tar' utility
         # Iterate over all entries in the archive
     $arch->list_reset(); # Reset Iterator
                          # Iterate through archive
-    while(my($tar_path, $phys_path) = $arch->list_next()) {
+    while(my $entry = $arch->list_next()) {
+        my($tar_path, $phys_path) = @$entry;
         print "$tar_path\n";
     }
 

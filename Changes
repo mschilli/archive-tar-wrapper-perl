@@ -4,6 +4,7 @@ Revision history for Perl extension Archive::Tar::Wrapper
 0.03  2005/05/23
    (ms) tarup() no longer uses "." as a directory, but globs for all
         top-level entries
+   (ms) critical fix for location of tarred files
 
 0.02  2005/04/20
    (ms) Added lots of documentation.

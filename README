@@ -16,7 +16,8 @@ SYNOPSIS
             # Iterate over all entries in the archive
         $arch->list_reset(); # Reset Iterator
                              # Iterate through archive
-        while(my($tar_path, $phys_path) = $arch->list_next()) {
+        while(my $entry = $arch->list_next()) {
+            my($tar_path, $phys_path) = @$entry;
             print "$tar_path\n";
         }
 
@@ -69,8 +70,8 @@ METHODS
     $arch->read("archive.tgz")
         "read()" opens the given tarball, expands it into a temporary
         directory and returns 1 on success und "undef" on failure. The
-        temporary directory holding the tar data gets cleaned up when
-        "$arch" goes out of scope.
+        temporary directory holding the tar data gets cleaned up when $arch
+        goes out of scope.
 
         "read" handles both compressed and uncompressed files. To find out
         if a file is compressed or uncompressed, it tries to guess by
@@ -106,27 +107,27 @@ METHODS
         "list_next()" instead of "list_all".
 
     $arch->add($logic_path, $file_or_stringref)
-        Add a new file to the tarball. "$logic_path" is the virtual path of
-        the file within the tarball. "$file_or_stringref" is either a
-        scalar, in which case it holds the physical path of a file on disk
-        to be transferred (i.e. copied) to the tarball. Or it is a reference
-        to a scalar, in which case its content is interpreted to be the data
-        of the file.
+        Add a new file to the tarball. $logic_path is the virtual path of
+        the file within the tarball. $file_or_stringref is either a scalar,
+        in which case it holds the physical path of a file on disk to be
+        transferred (i.e. copied) to the tarball. Or it is a reference to a
+        scalar, in which case its content is interpreted to be the data of
+        the file.
 
     $arch->remove($logic_path)
-        Removes a file from the tarball. "$logic_path" is the virtual path
-        of the file within the tarball.
+        Removes a file from the tarball. $logic_path is the virtual path of
+        the file within the tarball.
 
     $arch->locate($logic_path)
-        Finds the physical location of a file, specified by "$logic_path",
+        Finds the physical location of a file, specified by $logic_path,
         which is the virtual path of the file within the tarball. Returns a
         path to the temporary file "Archive::Tar::Wrapper" created to
         manipulate the tarball on disk.
 
     $arch->write($tarfile, $compress)
         Write out the tarball by tarring up all temporary files and
-        directories and store it in "$tarfile" on disk. If "$compress" holds
-        a true value, compression is used.
+        directories and store it in $tarfile on disk. If $compress holds a
+        true value, compression is used.
 
 KNOWN LIMITATIONS
     *   Currently, only "tar" programs supporting the "z" option (for
