@@ -5,6 +5,8 @@ Revision history for Perl extension Archive::Tar::Wrapper
    (ms) tarup() no longer uses "." as a directory, but globs for all
         top-level entries
    (ms) critical fix for location of tarred files
+   (ms) tmp dir cleanup now handled manually to avoid 
+        File::Temp warnings
 
 0.02  2005/04/20
    (ms) Added lots of documentation.
