@@ -13,7 +13,7 @@ my $TARDIR = "data";
 $TARDIR = "t/$TARDIR" unless -d $TARDIR;
 my $TMPDIR = "$TARDIR/tmp";
 
-use Test::More tests => 16;
+use Test::More tests => 5;
 BEGIN { use_ok('Archive::Tar::Wrapper') };
 
 rmdir $TMPDIR if -d $TMPDIR;
