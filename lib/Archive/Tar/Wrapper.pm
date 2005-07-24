@@ -18,7 +18,7 @@ use File::Find;
 use File::Basename;
 use Cwd;
 
-our $VERSION = "0.03";
+our $VERSION = "0.04";
 
 ###########################################
 sub new {

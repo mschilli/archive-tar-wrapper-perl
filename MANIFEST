@@ -1,4 +1,5 @@
 Changes
+eg/tarflat
 lib/Archive/Tar/Wrapper.pm
 Makefile.PL
 MANIFEST			This list of files
@@ -6,4 +7,6 @@ MANIFEST.SKIP
 META.yml			Module meta-data (added by MakeMaker)
 README
 t/001Basic.t
+t/002Mult.t
+t/data/bar.tar
 t/data/foo.tgz
