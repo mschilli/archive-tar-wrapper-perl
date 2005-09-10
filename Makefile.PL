@@ -10,6 +10,7 @@ WriteMakefile(
         File::Temp    => 0,
         Cwd           => 0,
         Log::Log4perl => 0,
+        IPC::Run      => 0,
                       }, # e.g., Module::Name => 1.1
     ($] >= 5.005 ?    ## Add these new keywords supported since 5.005
       (ABSTRACT_FROM => 'lib/Archive/Tar/Wrapper.pm',

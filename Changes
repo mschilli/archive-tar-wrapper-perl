@@ -1,6 +1,12 @@
 ######################################################################
 Revision history for Perl extension Archive::Tar::Wrapper
 
+0.05  2005/09/10
+   (ms) 'tar' is now running via IPC::Run
+   (ms) read() takes an optional list of files to save space
+        in case only a limited number of files is needed from the
+        tarball.
+
 0.04  2005/07/24
    (ms) Added eg/tarflat and more test cases
 

@@ -16,9 +16,10 @@ use File::Path;
 use File::Copy;
 use File::Find;
 use File::Basename;
+use IPC::Run qw(run);
 use Cwd;
 
-our $VERSION = "0.04";
+our $VERSION = "0.05";
 
 ###########################################
 sub new {
@@ -48,7 +49,7 @@ sub new {
 ###########################################
 sub read {
 ###########################################
-    my($self, $tarfile) = @_;
+    my($self, $tarfile, @files) = @_;
 
     my $cwd = getcwd();
 
@@ -62,17 +63,22 @@ sub read {
     my $compr_opt = "";
     $compr_opt = "z" if $self->is_compressed($tarfile);
 
-    my $cmd = "$self->{tar} ${compr_opt}xf $tarfile";
+    my $cmd = [$self->{tar}, "${compr_opt}xf", $tarfile, @files];
 
     DEBUG "Running $cmd";
-    my $rc = system("$cmd 2>/dev/null");
+
+    my $rc = run($cmd, \my($in, $out, $err));
+
+    if(!$rc) {
+         ERROR "@$cmd failed: $?";
+         return undef;
+    }
+
+    WARN $err if $err;
 
     chdir $cwd or LOGDIE "Cannot chdir to $cwd";
 
-    return 1 if $rc == 0;
-
-    ERROR "$cmd: $!";
-    return undef;
+    return 1;
 }
 
 ###########################################
@@ -295,17 +301,21 @@ sub write {
     my @top_entries = grep { $_ !~ /^\.\.?$/ } readdir DIR;
     closedir DIR;
 
-    my @cmd = ($self->{tar}, "${compr_opt}cf", $tarfile, @top_entries);
+    my $cmd = [$self->{tar}, "${compr_opt}cf", $tarfile, @top_entries];
 
-    DEBUG "Running @cmd";
-    my $rc = system(@cmd);
+    DEBUG "Running @$cmd";
+    my $rc = run($cmd, \my($in, $out, $err));
+
+    if(!$rc) {
+         ERROR "@$cmd failed: $?";
+         return undef;
+    }
+
+    WARN $err if $err;
 
     chdir $cwd or LOGDIE "Cannot chdir to $cwd";
 
-    return 1 if $rc == 0;
-
-    ERROR "@cmd: $!";
-    return undef;
+    return 1;
 }
 
 ###########################################
@@ -423,6 +433,15 @@ goes out of scope.
 C<read> handles both compressed and uncompressed files. To find out if
 a file is compressed or uncompressed, it tries to guess by extension,
 then by checking the first couple of bytes in the tarfile.
+
+If only a limited number of files is needed from a tarball, they
+can be specified after the tarball name:
+
+    $arch->read("archive.tgz", "path/file.dat", "path/sub/another.txt");
+
+The file names are passed unmodified to the C<tar> command, make sure
+that the file paths match exactly what's in the tarball, otherwise
+C<read()> will fail.
 
 =item B<$arch-E<gt>list_reset()>
 

@@ -13,7 +13,7 @@ use File::Temp qw(tempfile);
 my $TARDIR = "data";
 $TARDIR = "t/$TARDIR" unless -d $TARDIR;
 
-use Test::More tests => 16;
+use Test::More tests => 19;
 BEGIN { use_ok('Archive::Tar::Wrapper') };
 
 my $arch = Archive::Tar::Wrapper->new();
@@ -62,3 +62,25 @@ while(my $entry = $arch->list_next()) {
 }
 $got = join " ", sort @elements;
 is($got, "001Basic.t foo/bar/baz foo/bar/permtest", "Check list");
+
+# Check optional file names for extraction
+#data/bar.tar 
+#drwxrwxr-x mschilli/mschilli 0 2005-07-24 12:15:34 bar/
+#-rw-rw-r-- mschilli/mschilli 11 2005-07-24 12:15:27 bar/bar.dat
+#-rw-rw-r-- mschilli/mschilli 11 2005-07-24 12:15:34 bar/foo.dat
+
+my $a3 = Archive::Tar::Wrapper->new();
+$a3->read("$TARDIR/bar.tar", "bar/bar.dat");
+$elements = $a3->list_all();
+
+is(scalar @$elements, 1, "only one file extracted");
+is($elements->[0], "bar/bar.dat", "only one file extracted");
+
+# Ask for non-existent files in tarball
+my $a4 = Archive::Tar::Wrapper->new();
+
+    # Suppress the warning
+Log::Log4perl->get_logger("")->level($FATAL);
+
+my $rc = $a4->read("$TARDIR/bar.tar", "bar/bar.dat", "quack/schmack");
+is($rc, undef, "Failure to ask for non-existent files");

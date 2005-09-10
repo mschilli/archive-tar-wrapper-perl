@@ -1,5 +1,5 @@
 ######################################################################
-    Archive::Tar::Wrapper 0.04
+    Archive::Tar::Wrapper 0.05
 ######################################################################
 
 NAME
@@ -77,6 +77,15 @@ METHODS
         if a file is compressed or uncompressed, it tries to guess by
         extension, then by checking the first couple of bytes in the
         tarfile.
+
+        If only a limited number of files is needed from a tarball, they can
+        be specified after the tarball name:
+
+            $arch->read("archive.tgz", "path/file.dat", "path/sub/another.txt");
+
+        The file names are passed unmodified to the "tar" command, make sure
+        that the file paths match exactly what's in the tarball, otherwise
+        "read()" will fail.
 
     $arch->list_reset()
         Resets the list iterator. To be used before the first call to
