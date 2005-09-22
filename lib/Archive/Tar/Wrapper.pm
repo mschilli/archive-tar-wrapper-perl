@@ -19,7 +19,7 @@ use File::Basename;
 use IPC::Run qw(run);
 use Cwd;
 
-our $VERSION = "0.05";
+our $VERSION = "0.06";
 
 ###########################################
 sub new {
@@ -65,7 +65,7 @@ sub read {
 
     my $cmd = [$self->{tar}, "${compr_opt}xf", $tarfile, @files];
 
-    DEBUG "Running $cmd";
+    DEBUG "Running @$cmd";
 
     my $rc = run($cmd, \my($in, $out, $err));
 
