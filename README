@@ -71,7 +71,7 @@ METHODS
         "tar_read_options" and "tar_write_options" parameters. Example:
 
              my $arch = Archive::Tar::Wrapper->new(
-                           tar_read_options => "p"
+                           tar_write_options => "p"
                         );
 
         will use "tar xfp archive.tgz" to extract the tarball instead of

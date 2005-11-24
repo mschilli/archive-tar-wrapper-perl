@@ -432,7 +432,7 @@ Additional options can be passed to the C<tar> command by using the
 C<tar_read_options> and C<tar_write_options> parameters. Example:
 
      my $arch = Archive::Tar::Wrapper->new(
-                   tar_write_options => "p"
+                   tar_read_options => "p"
                 );
 
 will use C<tar xfp archive.tgz> to extract the tarball instead of just
