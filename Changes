@@ -3,6 +3,9 @@ Revision history for Perl extension Archive::Tar::Wrapper
 
 0.06  2005/09/22
    (ms) Fixed logging message in tar->read().
+   (ms) Additional options can be passed to tar (tar_read/write_options)
+   (ms) failed read() no longer chdirs out of the current directory
+   (ms) Fixed test suite for different umasks
 
 0.05  2005/09/10
    (ms) 'tar' is now running via IPC::Run

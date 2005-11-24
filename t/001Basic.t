@@ -13,9 +13,10 @@ use File::Temp qw(tempfile);
 my $TARDIR = "data";
 $TARDIR = "t/$TARDIR" unless -d $TARDIR;
 
-use Test::More tests => 19;
+use Test::More tests => 20;
 BEGIN { use_ok('Archive::Tar::Wrapper') };
 
+umask(0);
 my $arch = Archive::Tar::Wrapper->new();
 
 ok($arch->read("$TARDIR/foo.tgz"), "opening compressed tarfile");
@@ -84,3 +85,15 @@ Log::Log4perl->get_logger("")->level($FATAL);
 
 my $rc = $a4->read("$TARDIR/bar.tar", "bar/bar.dat", "quack/schmack");
 is($rc, undef, "Failure to ask for non-existent files");
+
+    # Permissions
+umask(022);
+my $a5 = Archive::Tar::Wrapper->new(
+    tar_read_options => "p",
+);
+$a5->read("$TARDIR/bar.tar");
+
+$f1 = $a5->locate("bar/bar.dat");
+
+$perm = ((stat($f1))[2] & 07777);
+is($perm, 0664, "permtest");

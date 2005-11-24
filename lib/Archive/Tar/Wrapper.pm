@@ -27,8 +27,10 @@ sub new {
     my($class, %options) = @_;
 
     my $self = {
-        tar     => undef,
-        tmpdir  => undef,
+        tar               => undef,
+        tmpdir            => undef,
+        tar_read_options  => '',
+        tar_write_options => '',
         %options,
     };
 
@@ -63,14 +65,16 @@ sub read {
     my $compr_opt = "";
     $compr_opt = "z" if $self->is_compressed($tarfile);
 
-    my $cmd = [$self->{tar}, "${compr_opt}xf", $tarfile, @files];
+    my $cmd = [$self->{tar}, "${compr_opt}xf$self->{tar_read_options}", 
+               $tarfile, @files];
 
     DEBUG "Running @$cmd";
 
     my $rc = run($cmd, \my($in, $out, $err));
 
     if(!$rc) {
-         ERROR "@$cmd failed: $?";
+         ERROR "@$cmd failed: $err";
+         chdir $cwd or LOGDIE "Cannot chdir to $cwd";
          return undef;
     }
 
@@ -301,13 +305,14 @@ sub write {
     my @top_entries = grep { $_ !~ /^\.\.?$/ } readdir DIR;
     closedir DIR;
 
-    my $cmd = [$self->{tar}, "${compr_opt}cf", $tarfile, @top_entries];
+    my $cmd = [$self->{tar}, "${compr_opt}cf$self->{tar_write_options}", 
+               $tarfile, @top_entries];
 
     DEBUG "Running @$cmd";
     my $rc = run($cmd, \my($in, $out, $err));
 
     if(!$rc) {
-         ERROR "@$cmd failed: $?";
+         ERROR "@$cmd failed: $err";
          return undef;
     }
 
@@ -422,6 +427,16 @@ Since C<Archive::Tar::Wrapper> creates temporary directories to store
 tar data, the location of the temporary directory can be specified:
 
     my $arch = Archive::Tar::Wrapper->new(tmpdir => '/path/to/tmpdir');
+
+Additional options can be passed to the C<tar> command by using the
+C<tar_read_options> and C<tar_write_options> parameters. Example:
+
+     my $arch = Archive::Tar::Wrapper->new(
+                   tar_write_options => "p"
+                );
+
+will use C<tar xfp archive.tgz> to extract the tarball instead of just
+C<tar xf archive.tgz>.
 
 =item B<$arch-E<gt>read("archive.tgz")>
 
