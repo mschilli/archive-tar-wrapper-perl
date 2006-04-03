@@ -19,7 +19,7 @@ use File::Basename;
 use IPC::Run qw(run);
 use Cwd;
 
-our $VERSION = "0.06";
+our $VERSION = "0.07";
 
 ###########################################
 sub new {
@@ -31,6 +31,7 @@ sub new {
         tmpdir            => undef,
         tar_read_options  => '',
         tar_write_options => '',
+        dirs              => 0,
         %options,
     };
 
@@ -204,19 +205,13 @@ sub list_all {
 ###########################################
     my($self) = @_;
 
-    my $cwd = getcwd();
-    chdir $self->{tardir} or LOGDIE "Can't chdir to $self->{tardir} ($!)";
-
     my @entries = ();
 
-    find(sub {
-              return if -d;
-              my $entry = $File::Find::name;
-              $entry =~ s#\./##;
-              push @entries, $entry;
-            }, ".");
+    $self->list_reset();
 
-    chdir $cwd or LOGDIE "Can't chdir to $cwd ($!)";
+    while(my $entry = $self->list_next()) {
+        push @entries, $entry;
+    }
 
     return \@entries;
 }
@@ -233,10 +228,13 @@ sub list_reset {
     chdir $self->{tardir} or LOGDIE "Can't chdir to $self->{tardir} ($!)";
 
     find(sub {
-              return if -d;
               my $entry = $File::Find::name;
-              $entry =~ s#\./##;
-              print FILE "$entry\n";
+              $entry =~ s#^\./##;
+              my $type = (-d $_ ? "d" :
+                          -l $_ ? "l" :
+                                  "f"
+                         );
+              print FILE "$type $entry\n";
             }, ".");
 
     chdir $cwd or LOGDIE "Can't chdir to $cwd ($!)";
@@ -256,14 +254,18 @@ sub list_next {
     my $list_file = File::Spec->catfile($self->{objdir}, "list");
     open FILE, "<$list_file" or LOGDIE "Can't open $list_file";
     seek FILE, $offset, 0;
-    my $entry = <FILE>;
 
-    return undef unless defined $entry;
+    { my $line = <FILE>;
 
-    $self->offset(tell FILE);
+      return undef unless defined $line;
 
-    chomp $entry;
-    return [$entry, File::Spec->catfile($self->{tmpdir}, "tar", $entry)];
+      chomp $line;
+      my($type, $entry) = split / /, $line, 2;
+      redo if $type eq "d" and ! $self->{dirs};
+      $self->offset(tell FILE);
+      return [$entry, File::Spec->catfile($self->{tmpdir}, "tar", $entry), 
+              $type];
+    }
 }
 
 ###########################################
@@ -438,6 +440,14 @@ C<tar_read_options> and C<tar_write_options> parameters. Example:
 will use C<tar xfp archive.tgz> to extract the tarball instead of just
 C<tar xf archive.tgz>.
 
+By default, the C<list_*()> functions will return only file entries. 
+Directories will be suppressed. To have C<list_*()> 
+return directories as well, use
+
+     my $arch = Archive::Tar::Wrapper->new(
+                   dirs  => 1
+                );
+
 =item B<$arch-E<gt>read("archive.tgz")>
 
 C<read()> opens the given tarball, expands it into a temporary directory
@@ -463,13 +473,14 @@ C<read()> will fail.
 Resets the list iterator. To be used before the first call to
 B<$arch->list_next()>.
 
-=item B<my($tar_path, $phys_path) = $arch-E<gt>list_next()>
+=item B<my($tar_path, $phys_path, $type) = $arch-E<gt>list_next()>
 
-Returns the next item in the tarfile. It returns a list of two scalars:
-the relative path of the item in the tarfile and the physical path
-to the unpacked file or directory on disk. To determine if the item
-is a file or directory, use perl's C<-f> and C<-d> operators on the
-physical path.
+Returns the next item in the tarfile. It returns a list of three scalars:
+the relative path of the item in the tarfile, the physical path
+to the unpacked file or directory on disk, and the type of the entry
+(f=file, d=directory, l=symlink). Note that by default, 
+Archive::Tar::Wrapper won't display directories, unless the C<dirs>
+parameter is set when running the constructor.
 
 =item B<my $items = $arch-E<gt>list_all()>
 
@@ -546,6 +557,11 @@ Filenames containing newlines are causing problems with the list
 iterators. To be fixed.
 
 =back
+
+=head1 BUGS
+
+Archive::Tar::Wrapper doesn't currently handle filenames with embedded
+newlines.
 
 =head1 LEGALESE
 

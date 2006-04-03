@@ -1,5 +1,5 @@
 ######################################################################
-    Archive::Tar::Wrapper 0.06
+    Archive::Tar::Wrapper 0.07
 ######################################################################
 
 NAME
@@ -77,6 +77,14 @@ METHODS
         will use "tar xfp archive.tgz" to extract the tarball instead of
         just "tar xf archive.tgz".
 
+        By default, the "list_*()" functions will return only file entries.
+        Directories will be suppressed. To have "list_*()" return
+        directories as well, use
+
+             my $arch = Archive::Tar::Wrapper->new(
+                           dirs  => 1
+                        );
+
     $arch->read("archive.tgz")
         "read()" opens the given tarball, expands it into a temporary
         directory and returns 1 on success und "undef" on failure. The
@@ -101,12 +109,13 @@ METHODS
         Resets the list iterator. To be used before the first call to
         $arch-list_next()>.
 
-    my($tar_path, $phys_path) = $arch->list_next()
-        Returns the next item in the tarfile. It returns a list of two
-        scalars: the relative path of the item in the tarfile and the
-        physical path to the unpacked file or directory on disk. To
-        determine if the item is a file or directory, use perl's "-f" and
-        "-d" operators on the physical path.
+    my($tar_path, $phys_path, $type) = $arch->list_next()
+        Returns the next item in the tarfile. It returns a list of three
+        scalars: the relative path of the item in the tarfile, the physical
+        path to the unpacked file or directory on disk, and the type of the
+        entry (f=file, d=directory, l=symlink). Note that by default,
+        Archive::Tar::Wrapper won't display directories, unless the "dirs"
+        parameter is set when running the constructor.
 
     my $items = $arch->list_all()
         Returns a reference to a (possibly huge) array of items in the
@@ -163,6 +172,10 @@ KNOWN LIMITATIONS
 
     *   Filenames containing newlines are causing problems with the list
         iterators. To be fixed.
+
+BUGS
+    Archive::Tar::Wrapper doesn't currently handle filenames with embedded
+    newlines.
 
 LEGALESE
     Copyright 2005 by Mike Schilli, all rights reserved. This program is

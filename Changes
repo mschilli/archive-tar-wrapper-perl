@@ -1,6 +1,11 @@
 ######################################################################
 Revision history for Perl extension Archive::Tar::Wrapper
 
+0.07  2006/04/02
+   (ms) Fixed list_all() to return a ref to an array of arrayrefs, as
+        explained in the docs.
+   (ms) Added "dirs" option to list directories as well.
+
 0.06  2005/09/22
    (ms) Fixed logging message in tar->read().
    (ms) Additional options can be passed to tar (tar_read/write_options)

@@ -8,5 +8,6 @@ META.yml			Module meta-data (added by MakeMaker)
 README
 t/001Basic.t
 t/002Mult.t
+t/003Dirs.t
 t/data/bar.tar
 t/data/foo.tgz

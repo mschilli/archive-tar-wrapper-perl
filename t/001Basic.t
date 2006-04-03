@@ -41,7 +41,7 @@ ok($arch->write($filename), "Tarring up");
 my $a2 = Archive::Tar::Wrapper->new();
 ok($a2->read($filename), "Reading in new tarball");
 my $elements = $a2->list_all();
-my $got = join " ", sort @$elements;
+my $got = join " ", sort map { $_->[0] } @$elements;
 is($got, "001Basic.t foo/bar/baz foo/bar/permtest", "Check list");
 
 my $f1 = $a2->locate("001Basic.t");
@@ -75,7 +75,7 @@ $a3->read("$TARDIR/bar.tar", "bar/bar.dat");
 $elements = $a3->list_all();
 
 is(scalar @$elements, 1, "only one file extracted");
-is($elements->[0], "bar/bar.dat", "only one file extracted");
+is($elements->[0]->[0], "bar/bar.dat", "only one file extracted");
 
 # Ask for non-existent files in tarball
 my $a4 = Archive::Tar::Wrapper->new();

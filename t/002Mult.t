@@ -26,7 +26,7 @@ ok($arch->read("$TARDIR/foo.tgz"), "opening compressed tarfile");
 ok($arch->read("$TARDIR/bar.tar"), "opening uncompressed");
 
 my $elements = $arch->list_all();
-my $got = join " ", sort @$elements;
+my $got = join " ", sort map { $_->[0] } @$elements;
 is($got, "001Basic.t bar/bar.dat bar/foo.dat", "file check");
 
 # Iterators
