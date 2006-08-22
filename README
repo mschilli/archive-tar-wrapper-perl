@@ -1,5 +1,5 @@
 ######################################################################
-    Archive::Tar::Wrapper 0.07
+    Archive::Tar::Wrapper 0.08
 ######################################################################
 
 NAME
@@ -156,6 +156,12 @@ METHODS
         Write out the tarball by tarring up all temporary files and
         directories and store it in $tarfile on disk. If $compress holds a
         true value, compression is used.
+
+    $arch->tardir()
+        Return the directory the tarball was unpacked in. This is sometimes
+        useful to play dirty tricks on "Archive::Tar::Wrapper" by
+        mass-manipulating unpacked files before wrapping them back up into
+        the tarball.
 
 KNOWN LIMITATIONS
     *   Currently, only "tar" programs supporting the "z" option (for
