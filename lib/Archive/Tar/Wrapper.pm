@@ -50,6 +50,14 @@ sub new {
 }
 
 ###########################################
+sub tardir {
+###########################################
+    my($self) = @_;
+
+    return $self->{tardir};
+}
+
+###########################################
 sub read {
 ###########################################
     my($self, $tarfile, @files) = @_;
@@ -263,7 +271,7 @@ sub list_next {
       my($type, $entry) = split / /, $line, 2;
       redo if $type eq "d" and ! $self->{dirs};
       $self->offset(tell FILE);
-      return [$entry, File::Spec->catfile($self->{tmpdir}, "tar", $entry), 
+      return [$entry, File::Spec->catfile($self->{tardir}, $entry), 
               $type];
     }
 }
@@ -526,6 +534,12 @@ tarball on disk.
 Write out the tarball by tarring up all temporary files and directories
 and store it in C<$tarfile> on disk. If C<$compress> holds a true value,
 compression is used.
+
+=item B<$arch-E<gt>tardir()>
+
+Return the directory the tarball was unpacked in. This is sometimes useful
+to play dirty tricks on C<Archive::Tar::Wrapper> by mass-manipulating
+unpacked files before wrapping them back up into the tarball.
 
 =back
 
