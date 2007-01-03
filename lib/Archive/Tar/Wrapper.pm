@@ -289,7 +289,7 @@ sub offset {
         close FILE;
     }
 
-    open FILE, "<$offset_file" or LOGDIE "Can't open $offset_file";
+    open FILE, "<$offset_file" or LOGDIE "Can't open $offset_file (Did you call list_next() without a previous list_reset()?)";
     my $offset = <FILE>;
     chomp $offset;
     return $offset;
