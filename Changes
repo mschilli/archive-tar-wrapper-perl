@@ -1,6 +1,9 @@
 ######################################################################
 Revision history for Perl extension Archive::Tar::Wrapper
 
+0.10  (not yet released)
+   (ms) Skipping unicode tests for perl < 5.8
+
 0.09  2007/07/20
    (ms) Added utf8 support in add($dataref)
    (ms) Fixed bug in add($ref) for adding string data, 
