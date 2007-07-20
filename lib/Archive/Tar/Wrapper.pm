@@ -531,7 +531,7 @@ To iterate over the list, the following construct can be used:
 If the list of items in the tarfile is big, use C<list_reset()> and
 C<list_next()> instead of C<list_all>.
 
-=item B<$arch-E<gt>add($logic_path, $file_or_stringref)>
+=item B<$arch-E<gt>add($logic_path, $file_or_stringref, [$options])>
 
 Add a new file to the tarball. C<$logic_path> is the virtual path
 of the file within the tarball. C<$file_or_stringref> is either
@@ -539,6 +539,19 @@ a scalar, in which case it holds the physical path of a file
 on disk to be transferred (i.e. copied) to the tarball. Or it is
 a reference to a scalar, in which case its content is interpreted
 to be the data of the file.
+
+If no additional parameters are given, permissions and user/group 
+id settings of a file to be added are copied. If you want different
+settings, specify them in the options hash:
+
+    $arch->add($logic_path, $stringref, 
+               { perm => 0755, uid => 123, gid => 10 });
+
+If $file_or_stringref is a reference to a Unicode string, the C<binmode>
+option has to be set to make sure the string gets written as proper UTF-8
+into the tarfile:
+
+    $arch->add($logic_path, $stringref, { binmode => ":utf8" });
 
 =item B<$arch-E<gt>remove($logic_path)>
 
