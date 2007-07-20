@@ -1,6 +1,12 @@
 ######################################################################
 Revision history for Perl extension Archive::Tar::Wrapper
 
+0.09  2007/07/20
+   (ms) Added utf8 support in add($dataref)
+   (ms) Fixed bug in add($ref) for adding string data, 
+        patch submitted by Karthik Joshi.
+   (ms) Changed tempfile CLEANUP to UNLINK in test suite
+
 0.08  2006/08/21
    (ms) Added tardir() method to obtain the directory the tarball was
         unpacked in.

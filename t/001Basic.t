@@ -13,7 +13,7 @@ use File::Temp qw(tempfile);
 my $TARDIR = "data";
 $TARDIR = "t/$TARDIR" unless -d $TARDIR;
 
-use Test::More tests => 20;
+use Test::More tests => 22;
 BEGIN { use_ok('Archive::Tar::Wrapper') };
 
 umask(0);
@@ -29,12 +29,17 @@ ok(!$arch->locate("nonexist"), "find nonexist");
 # Add a new file
 my $tmploc = $arch->locate("001Basic.t");
 ok($arch->add("foo/bar/baz", $tmploc), "adding file");
+
+# Add data
+my $data = "this is data";
+ok($arch->add("foo/bar/string", \$data), "adding data");
+
 ok($arch->locate("foo/bar/baz"), "find added file");
 
-ok($arch->add("foo/bar/permtest", $tmploc, 0770), "adding file");
+ok($arch->add("foo/bar/permtest", $tmploc, {perm => 0770}), "adding file");
 
 # Make a tarball
-my($fh, $filename) = tempfile(CLEANUP => 1);
+my($fh, $filename) = tempfile(UNLINK => 1);
 ok($arch->write($filename), "Tarring up");
 
 # List 
@@ -42,7 +47,8 @@ my $a2 = Archive::Tar::Wrapper->new();
 ok($a2->read($filename), "Reading in new tarball");
 my $elements = $a2->list_all();
 my $got = join " ", sort map { $_->[0] } @$elements;
-is($got, "001Basic.t foo/bar/baz foo/bar/permtest", "Check list");
+is($got, "001Basic.t foo/bar/baz foo/bar/permtest foo/bar/string", 
+   "Check list");
 
 my $f1 = $a2->locate("001Basic.t");
 my $f2 = $a2->locate("foo/bar/baz");
@@ -55,6 +61,12 @@ my $f3 = $a2->locate("foo/bar/permtest");
 my $perm = ((stat($f3))[2] & 07777);
 is($perm, 0770, "permtest");
 
+my $f4 = $a2->locate("foo/bar/string");
+open FILE, "<$f4" or die "Cannot open $f4";
+my $got_data = join '', <FILE>;
+close FILE;
+is($got_data, $data, "comparing file data");
+
 # Iterators
 $arch->list_reset();
 my @elements = ();
@@ -62,7 +74,8 @@ while(my $entry = $arch->list_next()) {
     push @elements, $entry->[0];
 }
 $got = join " ", sort @elements;
-is($got, "001Basic.t foo/bar/baz foo/bar/permtest", "Check list");
+is($got, "001Basic.t foo/bar/baz foo/bar/permtest foo/bar/string", 
+         "Check list");
 
 # Check optional file names for extraction
 #data/bar.tar 
