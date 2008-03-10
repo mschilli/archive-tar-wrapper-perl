@@ -96,8 +96,15 @@ my $a4 = Archive::Tar::Wrapper->new();
     # Suppress the warning
 Log::Log4perl->get_logger("")->level($FATAL);
 
-my $rc = $a4->read("$TARDIR/bar.tar", "bar/bar.dat", "quack/schmack");
-is($rc, undef, "Failure to ask for non-existent files");
+my $rc;
+
+SKIP: {
+    $rc = $a4->read("$TARDIR/bar.tar", "bar/bar.dat", "quack/schmack");
+    if($^O =~ /freebsd/i) {
+        skip("FreeBSD's tar is too lenient - skipping", 1);
+    }
+    is($rc, undef, "Failure to ask for non-existent files");
+}
 
     # Permissions
 umask(022);

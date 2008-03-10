@@ -1,6 +1,10 @@
 ######################################################################
 Revision history for Perl extension Archive::Tar::Wrapper
 
+0.10  2008/03/09
+   (ms) Skipping one test case for FreeBSD's tar, which does not complain
+        if asked to extract non-existent files.
+
 0.10  2007/07/21
    (ms) Skipping unicode tests for perl < 5.8
 

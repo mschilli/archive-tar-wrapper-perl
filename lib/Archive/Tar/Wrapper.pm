@@ -19,7 +19,7 @@ use File::Basename;
 use IPC::Run qw(run);
 use Cwd;
 
-our $VERSION = "0.10";
+our $VERSION = "0.11";
 
 ###########################################
 sub new {
