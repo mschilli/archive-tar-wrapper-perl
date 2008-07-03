@@ -1,6 +1,11 @@
 ######################################################################
 Revision history for Perl extension Archive::Tar::Wrapper
 
+0.12  2008/07/03
+   (ms) Applied modified patch by Daniel Barthel to enable more
+        files added to a tarball than there are allowed on the command
+        line.
+
 0.11  2008/03/09
    (ms) Skipping one test case for FreeBSD's tar, which does not complain
         if asked to extract non-existent files.
@@ -50,4 +55,3 @@ Revision history for Perl extension Archive::Tar::Wrapper
 
 0.01  2005/04/10
    (ms) Where it all began.
-

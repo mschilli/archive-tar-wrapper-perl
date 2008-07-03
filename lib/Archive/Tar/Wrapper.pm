@@ -19,7 +19,7 @@ use File::Basename;
 use IPC::Run qw(run);
 use Cwd;
 
-our $VERSION = "0.11";
+our $VERSION = "0.12";
 
 ###########################################
 sub new {
@@ -32,6 +32,7 @@ sub new {
         tar_read_options  => '',
         tar_write_options => '',
         dirs              => 0,
+        max_cmd_line_args => 512,
         %options,
     };
 
@@ -338,8 +339,23 @@ sub write {
     my @top_entries = grep { $_ !~ /^\.\.?$/ } readdir DIR;
     closedir DIR;
 
-    my $cmd = [$self->{tar}, "${compr_opt}cf$self->{tar_write_options}", 
-               $tarfile, @top_entries];
+    my $cmd;
+
+    if(@top_entries > $self->{max_cmd_line_args}) {
+        my $filelist_file = $self->{tmpdir}."/file-list";
+        open FLIST, ">$filelist_file" or 
+            LOGDIE "Cannot open $filelist_file ($!)";
+        for(@top_entries) {
+            print FLIST "$_\n";
+        }
+        close FLIST;
+        $cmd = [$self->{tar}, "${compr_opt}cf$self->{tar_write_options}", 
+                $tarfile, "-T", $filelist_file];
+    } else {
+        $cmd = [$self->{tar}, "${compr_opt}cf$self->{tar_write_options}", 
+                $tarfile, @top_entries];
+    }
+
 
     DEBUG "Running @$cmd";
     my $rc = run($cmd, \my($in, $out, $err));
@@ -478,6 +494,23 @@ return directories as well, use
      my $arch = Archive::Tar::Wrapper->new(
                    dirs  => 1
                 );
+
+If more files are added to a tarball than the command line can handle,
+C<Archive::Tar::Wrapper> will switch from using the command
+
+    tar cfv tarfile file1 file2 file3 ...
+
+to
+
+    tar cfv tarfile -T filelist
+
+where C<filelist> is a file containing all file to be added. The default
+for this switch is 512, but it can be changed by setting the parameter
+C<max_cmd_line_args>:
+
+     my $arch = Archive::Tar::Wrapper->new(
+         max_cmd_line_args  => 1024
+     );
 
 =item B<$arch-E<gt>read("archive.tgz")>
 
