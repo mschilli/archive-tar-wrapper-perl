@@ -1,6 +1,10 @@
 ######################################################################
 Revision history for Perl extension Archive::Tar::Wrapper
 
+0.13  2010/02/01
+   (ms) Added GNU tar check is_gnu()
+   (ms) Added tar_gnu_read_options to specify options like --numeric-owner
+
 0.12  2008/07/03
    (ms) Applied modified patch by Daniel Barthel to enable more
         files added to a tarball than there are allowed on the command

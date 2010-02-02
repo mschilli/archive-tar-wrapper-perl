@@ -1,5 +1,5 @@
 ######################################################################
-    Archive::Tar::Wrapper 0.11
+    Archive::Tar::Wrapper 0.13
 ######################################################################
 
 NAME
@@ -75,7 +75,12 @@ METHODS
                         );
 
         will use "tar xfp archive.tgz" to extract the tarball instead of
-        just "tar xf archive.tgz".
+        just "tar xf archive.tgz". Gnu tar supports even more options, these
+        can be passed in via
+
+             my $arch = Archive::Tar::Wrapper->new(
+                            tar_gnu_read_options => ["--numeric-owner"],
+                        );
 
         By default, the "list_*()" functions will return only file entries.
         Directories will be suppressed. To have "list_*()" return
@@ -84,6 +89,23 @@ METHODS
              my $arch = Archive::Tar::Wrapper->new(
                            dirs  => 1
                         );
+
+        If more files are added to a tarball than the command line can
+        handle, "Archive::Tar::Wrapper" will switch from using the command
+
+            tar cfv tarfile file1 file2 file3 ...
+
+        to
+
+            tar cfv tarfile -T filelist
+
+        where "filelist" is a file containing all file to be added. The
+        default for this switch is 512, but it can be changed by setting the
+        parameter "max_cmd_line_args":
+
+             my $arch = Archive::Tar::Wrapper->new(
+                 max_cmd_line_args  => 1024
+             );
 
     $arch->read("archive.tgz")
         "read()" opens the given tarball, expands it into a temporary
@@ -175,6 +197,10 @@ METHODS
         useful to play dirty tricks on "Archive::Tar::Wrapper" by
         mass-manipulating unpacked files before wrapping them back up into
         the tarball.
+
+    $arch->is_gnu()
+        Checks if the tar executable is a GNU tar by running 'tar --version'
+        and parsing the output for "GNU".
 
 KNOWN LIMITATIONS
     *   Currently, only "tar" programs supporting the "z" option (for

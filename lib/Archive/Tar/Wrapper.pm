@@ -19,7 +19,7 @@ use File::Basename;
 use IPC::Run qw(run);
 use Cwd;
 
-our $VERSION = "0.12";
+our $VERSION = "0.13";
 
 ###########################################
 sub new {
@@ -27,12 +27,13 @@ sub new {
     my($class, %options) = @_;
 
     my $self = {
-        tar               => undef,
-        tmpdir            => undef,
-        tar_read_options  => '',
-        tar_write_options => '',
-        dirs              => 0,
-        max_cmd_line_args => 512,
+        tar                  => undef,
+        tmpdir               => undef,
+        tar_read_options     => '',
+        tar_write_options    => '',
+        tar_gnu_read_options => [],
+        dirs                 => 0,
+        max_cmd_line_args    => 512,
         %options,
     };
 
@@ -75,8 +76,9 @@ sub read {
     my $compr_opt = "";
     $compr_opt = "z" if $self->is_compressed($tarfile);
 
-    my $cmd = [$self->{tar}, "${compr_opt}xf$self->{tar_read_options}", 
-               $tarfile, @files];
+    my $cmd = [$self->{tar}, "${compr_opt}x$self->{tar_read_options}",
+               @{$self->{tar_gnu_read_options}},
+               "-f", $tarfile, @files];
 
     DEBUG "Running @$cmd";
 
@@ -393,6 +395,20 @@ sub bin_find {
     return undef;
 }
 
+###########################################
+sub is_gnu {
+###########################################
+    my($self) = @_;
+
+    open PIPE, "$self->{tar} --version |" or 
+        return 0;
+
+    my $output = join "\n", <PIPE>;
+    close PIPE;
+
+    return $output =~ /GNU/;
+}
+
 1;
 
 __END__
@@ -485,7 +501,12 @@ C<tar_read_options> and C<tar_write_options> parameters. Example:
                 );
 
 will use C<tar xfp archive.tgz> to extract the tarball instead of just
-C<tar xf archive.tgz>.
+C<tar xf archive.tgz>. Gnu tar supports even more options, these can
+be passed in via
+
+     my $arch = Archive::Tar::Wrapper->new(
+                    tar_gnu_read_options => ["--numeric-owner"],
+                );
 
 By default, the C<list_*()> functions will return only file entries. 
 Directories will be suppressed. To have C<list_*()> 
@@ -609,6 +630,11 @@ compression is used.
 Return the directory the tarball was unpacked in. This is sometimes useful
 to play dirty tricks on C<Archive::Tar::Wrapper> by mass-manipulating
 unpacked files before wrapping them back up into the tarball.
+
+=item B<$arch-E<gt>is_gnu()>
+
+Checks if the tar executable is a GNU tar by running 'tar --version'
+and parsing the output for "GNU".
 
 =back
 

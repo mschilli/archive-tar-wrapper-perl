@@ -13,7 +13,7 @@ use File::Temp qw(tempfile);
 my $TARDIR = "data";
 $TARDIR = "t/$TARDIR" unless -d $TARDIR;
 
-use Test::More tests => 22;
+use Test::More tests => 23;
 BEGIN { use_ok('Archive::Tar::Wrapper') };
 
 umask(0);
@@ -117,3 +117,17 @@ $f1 = $a5->locate("bar/bar.dat");
 
 $perm = ((stat($f1))[2] & 07777);
 is($perm, 0664, "permtest");
+
+SKIP: {
+      # gnu options
+    my $a6 = Archive::Tar::Wrapper->new(
+        tar_gnu_read_options => ["--numeric-owner"],
+    );
+
+    skip "Only with gnu tar", 1 unless $a6->is_gnu();
+
+    $a6->read("$TARDIR/bar.tar");
+    $f1 = $a6->locate("bar/bar.dat");
+
+    ok(defined $f1, "numeric owner works");
+}
