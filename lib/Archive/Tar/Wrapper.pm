@@ -34,13 +34,24 @@ sub new {
         tar_gnu_read_options => [],
         dirs                 => 0,
         max_cmd_line_args    => 512,
+        ramdisk              => undef,
         %options,
     };
 
-    $self->{tar}     = bin_find("tar") unless $self->{tar};
+    bless $self, $class;
 
-    $self->{tmpdir}  = tempdir($self->{tmpdir} ? 
-                                    (DIR => $self->{tmpdir}) : ());
+    $self->{tar} = bin_find("tar") unless $self->{tar};
+
+    if(defined $self->{ramdisk}) {
+        my $rc = $self->ramdisk_mount( %{ $self->{ramdisk} } );
+        if(!$rc) {
+            LOGDIE "Mounting ramdisk failed";
+        }
+        $self->{tmpdir} = $self->{ramdisk}->{tmpdir};
+    } else {
+        $self->{tmpdir} = tempdir($self->{tmpdir} ? 
+                                        (DIR => $self->{tmpdir}) : ());
+    }
 
     $self->{tardir} = File::Spec->catfile($self->{tmpdir}, "tar");
     mkpath [$self->{tardir}], 0, 0755 or
@@ -48,7 +59,7 @@ sub new {
 
     $self->{objdir} = tempdir();
 
-    bless $self, $class;
+    return $self;
 }
 
 ###########################################
@@ -379,8 +390,10 @@ sub DESTROY {
 ###########################################
     my($self) = @_;
 
-    rmtree($self->{objdir}) if exists $self->{objdir};
-    rmtree($self->{tmpdir}) if exists $self->{tmpdir};
+    $self->ramdisk_unmount() if defined  $self->{ramdisk};
+
+    rmtree($self->{objdir}) if defined $self->{objdir};
+    rmtree($self->{tmpdir}) if defined $self->{tmpdir};
 }
 
 ######################################
@@ -407,6 +420,73 @@ sub is_gnu {
     close PIPE;
 
     return $output =~ /GNU/;
+}
+
+###########################################
+sub ramdisk_mount {
+###########################################
+    my($self, %options) = @_;
+
+      # mkdir -p /mnt/myramdisk
+      # mount -t tmpfs -o size=20m tmpfs /mnt/myramdisk
+
+     $self->{mount}  = bin_find("mount") unless $self->{mount};
+     $self->{umount} = bin_find("umount") unless $self->{umount};
+
+     for (qw(mount umount)) {
+         if(!defined $self->{$_}) {
+             LOGWARN "No $_ command found in PATH";
+             return undef;
+         }
+     }
+
+     $self->{ramdisk} = { %options };
+ 
+     $self->{ramdisk}->{size} = "100m" unless 
+       defined $self->{ramdisk}->{size};
+ 
+     if(! defined $self->{ramdisk}->{tmpdir}) {
+         $self->{ramdisk}->{tmpdir} = tempdir( CLEANUP => 1 );
+     }
+ 
+     my @cmd = ($self->{mount}, 
+                "-t", "tmpfs", "-o", "size=$self->{ramdisk}->{size}",
+                "tmpfs", $self->{ramdisk}->{tmpdir});
+
+     INFO "Mounting ramdisk: @cmd";
+     my $rc = system( @cmd );
+ 
+    if($rc) {
+        LOGWARN "Mount command '@cmd' failed: $?";
+        LOGWARN "Note that this only works on Linux and as root";
+        return;
+    }
+ 
+    $self->{ramdisk}->{mounted} = 1;
+ 
+    return 1;
+}
+
+###########################################
+sub ramdisk_unmount {
+###########################################
+    my($self) = @_;
+
+    return if !exists $self->{ramdisk}->{mounted};
+
+    my @cmd = ($self->{umount}, $self->{ramdisk}->{tmpdir});
+
+    INFO "Unmounting ramdisk: @cmd";
+
+    my $rc = system( @cmd );
+        
+    if($rc) {
+        LOGWARN "Unmount command '@cmd' failed: $?";
+        return;
+    }
+
+    delete $self->{ramdisk};
+    return 1;
 }
 
 1;
@@ -677,7 +757,11 @@ mounts the ramdisk and returns the temporary directory it's located in:
     );
 
       # Delete a ramdisk (as root):
-    Archive::Tar::Wrapper->ramdisk_umount( $tmpdir );
+    Archive::Tar::Wrapper->ramdisk_unmount();
+
+Optionally, the C<ramdisk_mount()> command accepts a C<tmpdir> parameter
+pointing to a temporary directory for the ramdisk if you wish to set it
+yourself instead of letting Archive::Tar::Wrapper create it automatically.
 
 =head1 KNOWN LIMITATIONS
 
