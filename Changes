@@ -1,9 +1,9 @@
 ######################################################################
 Revision history for Perl extension Archive::Tar::Wrapper
 
-0.14  (not yet released)
-   TODO: Implement documented ramdisk feature
+0.14  (2011/02/12)
    (ms) Added 'ramdisk' feature for Linux
+   (ms) More search paths for 'tar'
 
 0.13  2010/02/01
    (ms) Added GNU tar check is_gnu()

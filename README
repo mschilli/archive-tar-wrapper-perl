@@ -1,5 +1,5 @@
 ######################################################################
-    Archive::Tar::Wrapper 0.13
+    Archive::Tar::Wrapper 0.14
 ######################################################################
 
 NAME
@@ -66,6 +66,10 @@ METHODS
         tar data, the location of the temporary directory can be specified:
 
             my $arch = Archive::Tar::Wrapper->new(tmpdir => '/path/to/tmpdir');
+
+        Tremendous performance increases can be achieved if the temporary
+        directory is located on a ram disk. Check the "Using RAM Disks"
+        section below for details.
 
         Additional options can be passed to the "tar" command by using the
         "tar_read_options" and "tar_write_options" parameters. Example:
@@ -201,6 +205,48 @@ METHODS
     $arch->is_gnu()
         Checks if the tar executable is a GNU tar by running 'tar --version'
         and parsing the output for "GNU".
+
+Using RAM Disks
+    On Linux, it's quite easy to create a RAM disk and achieve tremendous
+    speedups while untarring or modifying a tarball. You can either create
+    the RAM disk by hand by running
+
+       # mkdir -p /mnt/myramdisk
+       # mount -t tmpfs -o size=20m tmpfs /mnt/myramdisk
+
+    and then feeding the ramdisk as a temporary directory to
+    Archive::Tar::Wrapper, like
+
+       my $tar = Archive::Tar::Wrapper->new( tmpdir => '/mnt/myramdisk' );
+
+    or using Archive::Tar::Wrapper's built-in option 'ramdisk':
+
+       my $tar = Archive::Tar::Wrapper->new( 
+           ramdisk => { 
+               type => 'tmpfs',
+               size => '20m',   # 20 MB
+           },
+       );
+
+    Only drawback with the latter option is that creating the RAM disk needs
+    to be performed as root, which often isn't desirable for security
+    reasons. For this reason, Archive::Tar::Wrapper offers a utility
+    functions that mounts the ramdisk and returns the temporary directory
+    it's located in:
+
+          # Create new ramdisk (as root):
+        my $tmpdir = Archive::Tar::Wrapper->ramdisk_mount(
+            type => 'tmpfs',
+            size => '20m',   # 20 MB
+        );
+
+          # Delete a ramdisk (as root):
+        Archive::Tar::Wrapper->ramdisk_unmount();
+
+    Optionally, the "ramdisk_mount()" command accepts a "tmpdir" parameter
+    pointing to a temporary directory for the ramdisk if you wish to set it
+    yourself instead of letting Archive::Tar::Wrapper create it
+    automatically.
 
 KNOWN LIMITATIONS
     *   Currently, only "tar" programs supporting the "z" option (for

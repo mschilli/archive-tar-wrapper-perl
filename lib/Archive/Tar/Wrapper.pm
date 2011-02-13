@@ -40,7 +40,12 @@ sub new {
 
     bless $self, $class;
 
-    $self->{tar} = bin_find("tar") unless $self->{tar};
+    $self->{tar} = bin_find("tar") unless defined $self->{tar};
+    $self->{tar} = bin_find("gtar") unless defined $self->{tar};
+
+    if( ! defined $self->{tar} ) {
+        LOGDIE "tar not found in PATH, please specify location";
+    }
 
     if(defined $self->{ramdisk}) {
         my $rc = $self->ramdisk_mount( %{ $self->{ramdisk} } );
@@ -401,10 +406,21 @@ sub bin_find {
 ######################################
     my($exe) = @_;
 
-    for my $path (split /:/, $ENV{PATH}) {
+    my @paths = split /:/, $ENV{PATH};
+
+    push @paths,
+         "/usr/bin",
+         "/bin",
+         "/usr/sbin",
+         "/opt/bin",
+         "/ops/csw/bin",
+         ;
+
+    for my $path ( @paths ) {
         my $full = File::Spec->catfile($path, $exe);
             return $full if -x $full;
     }
+
     return undef;
 }
 
