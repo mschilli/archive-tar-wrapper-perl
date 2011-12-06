@@ -380,6 +380,7 @@ sub write {
 
     if(!$rc) {
          ERROR "@$cmd failed: $err";
+         chdir $cwd or LOGDIE "Cannot chdir to $cwd";
          return undef;
     }
 
