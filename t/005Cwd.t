@@ -14,7 +14,8 @@ BEGIN { use_ok('Archive::Tar::Wrapper') };
 my $cwd = getcwd();
 my $evaled = eval {
   my $arch = Archive::Tar::Wrapper->new();
-  my(undef, $filename) = tempfile(OPEN => 0);
+  my(undef, $filename) = tempfile(UNLINK => 1);
+  unlink $filename; # OPEN => 0 gave a stupid warning
   # attempt to generate error from tar by not adding any files
   $arch->write($filename, 9);
   1;
