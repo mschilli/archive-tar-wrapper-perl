@@ -1,6 +1,11 @@
 ######################################################################
 Revision history for Perl extension Archive::Tar::Wrapper
 
+0.15  (2011/12/20)
+   (ms) Randy Stauner submitted a patch to reset the directory if a 
+        write() fails (e.g. because no files have been added).
+        https://github.com/mschilli/archive-tar-wrapper-perl/pull/1
+
 0.14  (2011/02/12)
    (ms) Added 'ramdisk' feature for Linux
    (ms) More search paths for 'tar'
