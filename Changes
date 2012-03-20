@@ -1,6 +1,10 @@
 ######################################################################
 Revision history for Perl extension Archive::Tar::Wrapper
 
+0.16  (2012/03/19)
+   (ms) [rt.cpan.org 75770] Allow add() with directories, and now preserves
+        directory permissions.
+
 0.15  (2011/12/20)
    (ms) [RT 73046] Randy Stauner submitted a patch to reset the directory if a 
         write() fails (e.g. because no files have been added).
