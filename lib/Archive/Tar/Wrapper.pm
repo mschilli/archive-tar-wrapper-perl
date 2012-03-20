@@ -166,9 +166,15 @@ sub add {
     my $binmode = $opts->{binmode} if defined $opts->{binmode};
 
     my $target = File::Spec->catfile($self->{tardir}, $rel_path);
-
     my $target_dir = dirname($target);
-    mkpath($target_dir, 0, 0755) unless -d $target_dir;
+
+    if( ! -d $target_dir ) {
+        if( ref($path_or_stringref) ) {
+            $self->add( dirname( $rel_path ), dirname( $target_dir ) );
+        } else {
+            $self->add( dirname( $rel_path ), dirname( $path_or_stringref ) );
+        }
+    }
 
     if(ref($path_or_stringref)) {
         open FILE, ">$target" or LOGDIE "Can't open $target ($!)";
@@ -177,6 +183,9 @@ sub add {
         }
         print FILE $$path_or_stringref;
         close FILE;
+    } elsif( -d $path_or_stringref ) {
+          # perms will be fixed further down
+        mkpath($target, 0, 0755) unless -d $target;
     } else {
         copy $path_or_stringref, $target or
             LOGDIE "Can't copy $path_or_stringref to $target ($!)";
