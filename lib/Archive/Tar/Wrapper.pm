@@ -16,6 +16,7 @@ use File::Path;
 use File::Copy;
 use File::Find;
 use File::Basename;
+use File::Which qw(which);
 use IPC::Run qw(run);
 use Cwd;
 
@@ -40,8 +41,8 @@ sub new {
 
     bless $self, $class;
 
-    $self->{tar} = bin_find("tar") unless defined $self->{tar};
-    $self->{tar} = bin_find("gtar") unless defined $self->{tar};
+    $self->{tar} = which("tar") unless defined $self->{tar};
+    $self->{tar} = which("gtar") unless defined $self->{tar};
 
     if( ! defined $self->{tar} ) {
         LOGDIE "tar not found in PATH, please specify location";
@@ -411,29 +412,6 @@ sub DESTROY {
     rmtree($self->{tmpdir}) if defined $self->{tmpdir};
 }
 
-######################################
-sub bin_find {
-######################################
-    my($exe) = @_;
-
-    my @paths = split /:/, $ENV{PATH};
-
-    push @paths,
-         "/usr/bin",
-         "/bin",
-         "/usr/sbin",
-         "/opt/bin",
-         "/ops/csw/bin",
-         ;
-
-    for my $path ( @paths ) {
-        my $full = File::Spec->catfile($path, $exe);
-            return $full if -x $full;
-    }
-
-    return undef;
-}
-
 ###########################################
 sub is_gnu {
 ###########################################
@@ -456,8 +434,8 @@ sub ramdisk_mount {
       # mkdir -p /mnt/myramdisk
       # mount -t tmpfs -o size=20m tmpfs /mnt/myramdisk
 
-     $self->{mount}  = bin_find("mount") unless $self->{mount};
-     $self->{umount} = bin_find("umount") unless $self->{umount};
+     $self->{mount}  = which("mount") unless $self->{mount};
+     $self->{umount} = which("umount") unless $self->{umount};
 
      for (qw(mount umount)) {
          if(!defined $self->{$_}) {
