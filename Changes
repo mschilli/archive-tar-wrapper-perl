@@ -1,6 +1,10 @@
 ######################################################################
 Revision history for Perl extension Archive::Tar::Wrapper
 
+0.17  (2013/07/01)
+   (ms) Sanko Robinson replaced bin_find() by File::Which::which() to allow
+        for better Win32 portability.
+
 0.16  (2012/03/19)
    (ms) [rt.cpan.org 75770] Allow add() with directories, and now preserves
         directory permissions.

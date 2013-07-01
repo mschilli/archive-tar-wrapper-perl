@@ -34,6 +34,7 @@
          "requires" : {
             "Cwd" : "0",
             "File::Temp" : "0",
+            "File::Which" : "0",
             "IPC::Run" : "0",
             "Log::Log4perl" : "0"
          }
@@ -45,5 +46,5 @@
          "url" : "http://github.com/mschilli/archive-tar-wrapper-perl"
       }
    },
-   "version" : "0.16"
+   "version" : "0.17"
 }
