@@ -11,7 +11,7 @@ use File::Temp qw(tempfile);
 
 my $TARDIR = "data";
 $TARDIR = "t/$TARDIR" unless -d $TARDIR;
-my $TMPDIR = "$TARDIR/tmp";
+my $TMPDIR = "$TARDIR/tmp_$$";
 
 use Test::More tests => 4;
 BEGIN { use_ok('Archive::Tar::Wrapper') };
