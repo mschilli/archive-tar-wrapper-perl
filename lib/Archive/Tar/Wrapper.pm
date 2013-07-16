@@ -20,7 +20,7 @@ use File::Which qw(which);
 use IPC::Run qw(run);
 use Cwd;
 
-our $VERSION = "0.17";
+our $VERSION = "0.18";
 
 ###########################################
 sub new {

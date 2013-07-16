@@ -7,18 +7,14 @@ use warnings;
 use strict;
 use Log::Log4perl qw(:easy);
 use File::Path;
-use File::Temp qw(tempfile);
+use File::Temp qw(tempfile tempdir);
 
 my $TARDIR = "data";
 $TARDIR = "t/$TARDIR" unless -d $TARDIR;
-my $TMPDIR = "$TARDIR/tmp_$$";
+my $TMPDIR = tempdir( CLEANUP => 1 );
 
 use Test::More tests => 5;
 BEGIN { use_ok('Archive::Tar::Wrapper') };
-
-rmdir $TMPDIR if -d $TMPDIR;
-mkdir $TMPDIR or die "Cannot mkdir $TMPDIR";
-END { rmtree $TMPDIR }
 
 my $arch = Archive::Tar::Wrapper->new(tmpdir => $TMPDIR);
 

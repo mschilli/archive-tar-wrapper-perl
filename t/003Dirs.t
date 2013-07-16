@@ -7,11 +7,11 @@ use warnings;
 use strict;
 use Log::Log4perl qw(:easy);
 use File::Path;
-use File::Temp qw(tempfile);
+use File::Temp qw(tempfile tempdir);
 
 my $TARDIR = "data";
 $TARDIR = "t/$TARDIR" unless -d $TARDIR;
-my $TMPDIR = "$TARDIR/tmp_$$";
+my $TMPDIR = tempdir( CLEANUP => 1 );
 
 use Test::More tests => 4;
 BEGIN { use_ok('Archive::Tar::Wrapper') };
