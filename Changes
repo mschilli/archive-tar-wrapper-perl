@@ -1,6 +1,9 @@
 ######################################################################
 Revision history for Perl extension Archive::Tar::Wrapper
 
+0.19  (2014/02/16)
+   (ms) RsrchBoy added support for bzip2-compressed tarfiles.
+
 0.18  (2013/07/15)
    (ms) Moved to tmpdir() in t/002Mult.t because some smoke testers don't
         like writing into t/data.

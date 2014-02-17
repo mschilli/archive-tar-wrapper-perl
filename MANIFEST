@@ -14,5 +14,7 @@ t/003Dirs.t
 t/004Utf8.t
 t/005Cwd.t
 t/006DirPerms.t
+t/007bzip.t
 t/data/bar.tar
+t/data/foo.tar.bz2
 t/data/foo.tgz
