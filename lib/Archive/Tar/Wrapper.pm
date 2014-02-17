@@ -91,7 +91,7 @@ sub read {
         LOGDIE "Cannot chdir to $self->{tardir}";
 
     my $compr_opt = "";
-    $compr_opt = "z" if $self->is_compressed($tarfile);
+    $compr_opt = $self->is_compressed($tarfile);
 
     my $cmd = [$self->{tar}, "${compr_opt}x$self->{tar_read_options}",
                @{$self->{tar_gnu_read_options}},
@@ -119,18 +119,19 @@ sub is_compressed {
 ###########################################
     my($self, $tarfile) = @_;
 
-    return 1 if $tarfile =~ /\.t?gz$/i;
+    return 'z' if $tarfile =~ /\.t?gz$/i;
+    return 'j' if $tarfile =~ /\.bz2$/i;
 
         # Sloppy check for gzip files
     open FILE, "<$tarfile" or die "Cannot open $tarfile";
     binmode FILE;
     my $read = sysread(FILE, my $two, 2, 0) or die "Cannot sysread";
     close FILE;
-    return 1 if 
+    return 'z' if 
         ord(substr($two, 0, 1)) eq 0x1F and 
         ord(substr($two, 1, 1)) eq 0x8B;
 
-    return 0;
+    return q{};
 }
 
 ###########################################
