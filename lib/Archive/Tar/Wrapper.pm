@@ -1,8 +1,4 @@
 ###########################################
-# Archive::Tar::Wrapper -- 2005, Mike Schilli <cpan@perlmeister.com>
-###########################################
-
-###########################################
 package Archive::Tar::Wrapper;
 ###########################################
 
@@ -20,7 +16,7 @@ use File::Which qw(which);
 use IPC::Run qw(run);
 use Cwd;
 
-our $VERSION = "0.19";
+our $VERSION = "0.20";
 
 ###########################################
 sub new {
@@ -222,11 +218,13 @@ sub add {
 ######################################
 sub perm_cp {
 ######################################
+    my($source, $target) = @_;
+
     # Lifted from Ben Okopnik's
     # http://www.linuxgazette.com/issue87/misc/tips/cpmod.pl.txt
 
-    my $perms = perm_get($_[0]);
-    perm_set($_[1], $perms);
+    my $perms = perm_get($source);
+    perm_set($target, $perms);
 }
 
 ######################################
@@ -245,8 +243,10 @@ sub perm_set {
 ######################################
     my($filename, $perms) = @_;
 
-    chown($perms->[1], $perms->[2], $filename) or
-        LOGDIE "Cannot chown $filename ($!)";
+      # ignore errors here, as we can't change uid/gid unless we're
+      # the superuser (see LIMITATIONS section)
+    chown($perms->[1], $perms->[2], $filename);
+
     chmod($perms->[0] & 07777,    $filename) or
         LOGDIE "Cannot chmod $filename ($!)";
 }
@@ -794,6 +794,25 @@ them. This will be fixed, though.
 
 Filenames containing newlines are causing problems with the list
 iterators. To be fixed.
+
+=item *
+
+If you ask Archive::Tar::Wrapper to add a file to a tarball, it copies it into
+a temporary directory and then calls the system tar to wrap up that directory
+into a tarball.
+
+This approach has limitations when it comes to file permissions: If the file to
+be added belongs to a different user/group, Archive::Tar::Wrapper will adjust
+the uid/gid/permissions of the target file in the temporary directory to
+reflect the original file's settings, to make sure the system tar will add it
+like that to the tarball, just like a regular tar run on the original file
+would. But this will fail of course if the original file's uid is different
+from the current user's, unless the script is running with superuser rights.
+The tar program by itself (without Archive::Tar::Wrapper) works differently:
+It'll just make a note of a file's uid/gid/permissions in the tarball (which it
+can do without superuser rights) and upon extraction, it'll adjust the
+permissions of newly generated files if the -p option is given (default for
+superuser).
 
 =back
 

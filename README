@@ -1,5 +1,5 @@
 ######################################################################
-    Archive::Tar::Wrapper 0.19
+    Archive::Tar::Wrapper 0.20
 ######################################################################
 
 NAME
@@ -263,6 +263,25 @@ KNOWN LIMITATIONS
 
     *   Filenames containing newlines are causing problems with the list
         iterators. To be fixed.
+
+    *   If you ask Archive::Tar::Wrapper to add a file to a tarball, it
+        copies it into a temporary directory and then calls the system tar
+        to wrap up that directory into a tarball.
+
+        This approach has limitations when it comes to file permissions: If
+        the file to be added belongs to a different user/group,
+        Archive::Tar::Wrapper will adjust the uid/gid/permissions of the
+        target file in the temporary directory to reflect the original
+        file's settings, to make sure the system tar will add it like that
+        to the tarball, just like a regular tar run on the original file
+        would. But this will fail of course if the original file's uid is
+        different from the current user's, unless the script is running with
+        superuser rights. The tar program by itself (without
+        Archive::Tar::Wrapper) works differently: It'll just make a note of
+        a file's uid/gid/permissions in the tarball (which it can do without
+        superuser rights) and upon extraction, it'll adjust the permissions
+        of newly generated files if the -p option is given (default for
+        superuser).
 
 BUGS
     Archive::Tar::Wrapper doesn't currently handle filenames with embedded

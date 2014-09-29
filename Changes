@@ -1,6 +1,11 @@
 ######################################################################
 Revision history for Perl extension Archive::Tar::Wrapper
 
+0.20  (2014/09/29)
+   (ms) Ignore errors on chown/chgrp when files from different owners/groups
+        are copied into a tarball, accept the limitation that they'll be
+        owned by the script user unless we're running as superuser.
+
 0.19  (2014/02/16)
    (ms) RsrchBoy added support for bzip2-compressed tarfiles.
 
