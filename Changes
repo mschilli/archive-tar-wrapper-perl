@@ -1,7 +1,7 @@
 ######################################################################
 Revision history for Perl extension Archive::Tar::Wrapper
 
-0.21  (not yet released)
+0.21  (2014/10/16)
    (ms) [rt.cpan.org 87536] Setting default umask to get predictable test 
         results regardless of local umask settings.
 
