@@ -1,6 +1,10 @@
 ######################################################################
 Revision history for Perl extension Archive::Tar::Wrapper
 
+0.21  (not yet released)
+   (ms) [rt.cpan.org 87536] Setting default umask to get predictable test 
+        results regardless of local umask settings.
+
 0.20  (2014/09/29)
    (ms) Ignore errors on chown/chgrp when files from different owners/groups
         are copied into a tarball, accept the limitation that they'll be

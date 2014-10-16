@@ -21,6 +21,9 @@ my $arch = Archive::Tar::Wrapper->new();
 my $tempdir = tempdir( CLEANUP => 1 );
 my($fh, $tarfile) = tempfile(UNLINK => 1);
 
+  # to get predictable results regardless of local umask settings
+umask 0002;
+
 my $foodir = "$tempdir/foo";
 my $foofile = "$foodir/foofile";
 
