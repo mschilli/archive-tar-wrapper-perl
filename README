@@ -1,5 +1,5 @@
 ######################################################################
-    Archive::Tar::Wrapper 0.21
+    Archive::Tar::Wrapper 0.22
 ######################################################################
 
 NAME
@@ -85,6 +85,20 @@ METHODS
              my $arch = Archive::Tar::Wrapper->new(
                             tar_gnu_read_options => ["--numeric-owner"],
                         );
+
+        Similarily, "tar_gnu_write_options" can be used to provide
+        additional options for Gnu tar implementations. For example, the tar
+        object
+
+            my $tar = Archive::Tar::Wrapper->new(
+                          tar_gnu_write_options => ["--exclude=foo"],
+                      );
+
+        will call the "tar" utility internally like
+
+            tar cf tarfile --exclude=foo ...
+
+        when the "write" method gets called.
 
         By default, the "list_*()" functions will return only file entries.
         Directories will be suppressed. To have "list_*()" return
