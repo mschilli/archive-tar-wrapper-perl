@@ -24,14 +24,15 @@ sub new {
     my($class, %options) = @_;
 
     my $self = {
-        tar                  => undef,
-        tmpdir               => undef,
-        tar_read_options     => '',
-        tar_write_options    => '',
-        tar_gnu_read_options => [],
-        dirs                 => 0,
-        max_cmd_line_args    => 512,
-        ramdisk              => undef,
+        tar                   => undef,
+        tmpdir                => undef,
+        tar_read_options      => '',
+        tar_write_options     => '',
+        tar_gnu_read_options  => [],
+        tar_gnu_write_options => [],
+        dirs                  => 0,
+        max_cmd_line_args     => 512,
+        ramdisk               => undef,
         %options,
     };
 
@@ -368,7 +369,8 @@ sub write {
     my @top_entries = grep { $_ !~ /^\.\.?$/ } readdir DIR;
     closedir DIR;
 
-    my $cmd;
+    my $cmd = [$self->{tar}, "${compr_opt}cf$self->{tar_write_options}",
+               $tarfile, @{$self->{tar_gnu_write_options}}];
 
     if(@top_entries > $self->{max_cmd_line_args}) {
         my $filelist_file = $self->{tmpdir}."/file-list";
@@ -378,13 +380,10 @@ sub write {
             print FLIST "$_\n";
         }
         close FLIST;
-        $cmd = [$self->{tar}, "${compr_opt}cf$self->{tar_write_options}", 
-                $tarfile, "-T", $filelist_file];
+        push @$cmd, "-T", $filelist_file;
     } else {
-        $cmd = [$self->{tar}, "${compr_opt}cf$self->{tar_write_options}", 
-                $tarfile, @top_entries];
+        push @$cmd, @top_entries;
     }
-
 
     DEBUG "Running @$cmd";
     my $rc = run($cmd, \my($in, $out, $err));
@@ -596,6 +595,19 @@ be passed in via
      my $arch = Archive::Tar::Wrapper->new(
                     tar_gnu_read_options => ["--numeric-owner"],
                 );
+
+Similarily, C<tar_gnu_write_options> can be used to provide additional
+options for Gnu tar implementations. For example, the tar object
+
+    my $tar = Archive::Tar::Wrapper->new(
+                  tar_gnu_write_options => ["--exclude=foo"],
+              );
+
+will call the C<tar> utility internally like
+
+    tar cf tarfile --exclude=foo ...
+
+when the C<write> method gets called.
 
 By default, the C<list_*()> functions will return only file entries. 
 Directories will be suppressed. To have C<list_*()> 

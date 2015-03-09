@@ -6,6 +6,7 @@
 use warnings;
 use strict;
 use Log::Log4perl qw(:easy);
+use FindBin qw($Bin);
 Log::Log4perl->easy_init($ERROR);
 
 use File::Temp qw(tempfile);
@@ -13,7 +14,7 @@ use File::Temp qw(tempfile);
 my $TARDIR = "data";
 $TARDIR = "t/$TARDIR" unless -d $TARDIR;
 
-use Test::More tests => 23;
+use Test::More tests => 24;
 BEGIN { use_ok('Archive::Tar::Wrapper') };
 
 umask(0);
@@ -130,4 +131,27 @@ SKIP: {
     $f1 = $a6->locate("bar/bar.dat");
 
     ok(defined $f1, "numeric owner works");
+
+      # gnu options
+    my $tar = Archive::Tar::Wrapper->new(
+        tar_gnu_write_options => ["--exclude=foo"],
+    );
+
+    skip "Only with gnu tar", 1 unless $tar->is_gnu();
+
+    my $file_loc = $tar->locate("001Basic.t");
+    $tar->add("foo/bar/baz", $0);
+    $tar->add("boo/bar/baz", $0);
+
+    my($fh, $filename) = tempfile(UNLINK => 1, SUFFIX => ".tgz" );
+    $tar->write($filename, 1);
+
+    my $tar_read = Archive::Tar::Wrapper->new();
+    $tar_read->read($filename);
+
+    for my $entry ( @{$tar_read->list_all()} ) {
+        my($tar_path, $real_path) = @$entry;
+
+        is($tar_path, "boo/bar/baz", "foo excluded");
+    }
 }

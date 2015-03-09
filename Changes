@@ -1,6 +1,10 @@
 ######################################################################
 Revision history for Perl extension Archive::Tar::Wrapper
 
+0.22  (2015/03/08)
+   (ms) Added tar_gnu_write_options option suggested by Csaba Major with
+        tests and docs.
+
 0.21  (2014/10/16)
    (ms) [rt.cpan.org 87536] Setting default umask to get predictable test 
         results regardless of local umask settings.
