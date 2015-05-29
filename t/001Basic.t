@@ -132,6 +132,9 @@ SKIP: {
 
     ok(defined $f1, "numeric owner works");
 
+}
+
+SKIP: {
       # gnu options
     my $tar = Archive::Tar::Wrapper->new(
         tar_gnu_write_options => ["--exclude=foo"],
