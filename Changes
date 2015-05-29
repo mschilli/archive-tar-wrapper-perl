@@ -1,6 +1,11 @@
 ######################################################################
 Revision history for Perl extension Archive::Tar::Wrapper
 
+0.23  (2015/05/28)
+   (ms) Mark Gardner added separate skips in the test suite to deal 
+        with the absense of GNU tar:
+        https://github.com/mschilli/archive-tar-wrapper-perl/pull/7
+
 0.22  (2015/03/08)
    (ms) Added tar_gnu_write_options option suggested by Csaba Major with
         tests and docs.
